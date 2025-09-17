@@ -218,10 +218,8 @@ export function GifMergerTool() {
           技术实现说明
         </h3>
         <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
-          <p>• <strong>精确解析</strong>：使用gifuct-js库解析GIF的真实帧数据，保持原始动画效果</p>
           <p>• <strong>帧处理</strong>：正确实现累积渲染机制和Disposal方法处理</p>
           <p>• <strong>时序同步</strong>：以最长GIF的帧数为播放周期，短GIF播放完后定格在最后一帧</p>
-          <p>• <strong>标准输出</strong>：使用gif.js生成标准GIF格式，确保兼容性</p>
           <p>• <strong>透明支持</strong>：完整支持透明背景GIF的合并</p>
         </div>
       </div>

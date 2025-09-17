@@ -32,7 +32,6 @@ export default function GifMergerPage() {
             GIF合并工具
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-4">
-            使用先进的 <span className="font-semibold text-blue-600">gifuct-js</span> 和 <span className="font-semibold text-blue-600">gif.js</span> 技术，
             精确解析和合并多个GIF动画文件。支持透明背景、网格布局和时序同步，
             保持原始动画效果。
           </p>
@@ -56,20 +55,15 @@ export default function GifMergerPage() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">核心特性</h3>
                 <ul className="space-y-2">
-                  <li>• 使用gifuct-js精确解析GIF帧数据</li>
                   <li>• 保持原始动画时序和帧延迟</li>
                   <li>• 支持透明、白色、黑色背景</li>
                   <li>• 智能网格布局自动排列</li>
                   <li>• 以最长GIF为播放周期</li>
-                  <li>• 实时进度显示</li>
                 </ul>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">技术优势</h3>
                 <ul className="space-y-2">
-                  <li>• 前端处理，无需上传服务器</li>
-                  <li>• 使用Web Workers提升性能</li>
-                  <li>• 支持累积渲染和Disposal处理</li>
                   <li>• 生成标准GIF格式文件</li>
                   <li>• 完整保留动画特性</li>
                   <li>• 跨平台兼容性</li>

@@ -272,8 +272,6 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-400">
         <h4 className="font-medium mb-2">技术特性：</h4>
         <ul className="space-y-1">
-          <li>• 使用gifuct-js精确解析GIF帧数据</li>
-          <li>• 使用gif.js生成标准GIF格式</li>
           <li>• 保持原始动画时序和帧延迟</li>
           <li>• 支持透明背景和颜色背景</li>
           <li>• 以最长GIF为播放周期，短GIF定格在最后一帧</li>

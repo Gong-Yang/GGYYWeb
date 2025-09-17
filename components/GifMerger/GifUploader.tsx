@@ -214,7 +214,6 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
       </div>
       
       <div className="mt-4 text-sm text-gray-600 dark:text-gray-400 space-y-1">
-        <p>• 使用gifuct-js精确解析GIF帧数据</p>
         <p>• 保持原始动画帧序列和时间</p>
         <p>• 自动以最长GIF的帧数为播放周期</p>
         <p>• 较短GIF播放完后定格在最后一帧</p>
