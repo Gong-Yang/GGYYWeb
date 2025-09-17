@@ -40,8 +40,12 @@ export default function Web() {
             <Button
               href="https://vercel.com/new/git/external?repository-url=https://github.com/Blazity/next-enterprise"
               intent="secondary"
+              className="mr-3"
             >
               Deploy Now
+            </Button>
+            <Button href="/gif-merger" intent="secondary">
+              GIF合并工具
             </Button>
           </div>
         </div>
