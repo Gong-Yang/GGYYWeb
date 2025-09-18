@@ -1,4 +1,43 @@
 
+第一步：在服务器上安装依赖
+
+bash
+# 安装 Node.js (建议使用 nvm)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+nvm install 20
+nvm use 20
+
+# 启用 Corepack
+corepack enable
+第二步：上传项目代码
+
+bash
+# 方式1：使用 git clone
+git clone https://github.com/Gong-Yang/WebTool.git
+cd next-enterprise
+
+# 方式2：直接上传压缩包并解压
+第三步：安装项目依赖
+
+bash
+pnpm install
+第四步：构建生产版本
+
+bash
+pnpm build
+第五步：启动生产服务
+
+bash
+# 直接启动
+pnpm start
+
+# 或使用 PM2 进程管理器（推荐）
+npm install -g pm2
+pm2 start npm --name "next-enterprise" -- start
+pm2 save
+pm2 startup
+
+
 # [Next.js Enterprise Boilerplate](https://blazity.com/open-source/nextjs-enterprise-boilerplate) 
 
 A production-ready template for building enterprise applications with Next.js. This boilerplate provides a solid foundation with carefully selected technologies and ready-to-go infrastructure to help you develop high-quality applications efficiently.

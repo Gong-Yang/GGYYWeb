@@ -5,6 +5,7 @@ import { env } from "./env.mjs"
 
 const config: NextConfig = {
   reactStrictMode: true,
+  output: 'standalone', // 启用独立输出模式，用于Docker部署
   logging: {
     fetches: {
       fullUrl: true,

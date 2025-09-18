@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import React, { useCallback, useState } from 'react';
 import type { GifObject, MergeOptions } from './types';
 
@@ -18,18 +19,19 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
   });
 
   // 动态加载gif.js
-  const loadGifJs = useCallback((): Promise<any> => {
+  const loadGifJs = useCallback((): Promise<unknown> => {
     return new Promise((resolve, reject) => {
-      if ((window as any).GIF) {
-        resolve((window as any).GIF);
+      const globalWindow = window as unknown as { GIF: unknown };
+      if (globalWindow.GIF) {
+        resolve(globalWindow.GIF);
         return;
       }
 
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js';
       script.onload = () => {
-        if ((window as any).GIF) {
-          resolve((window as any).GIF);
+        if (globalWindow.GIF) {
+          resolve(globalWindow.GIF);
         } else {
           reject(new Error('gif.js加载失败'));
         }
@@ -76,7 +78,21 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
       });
 
       // 创建gif.js实例
-      const gif = new GIF({
+      const GifConstructor = GIF as unknown as new (options: {
+        workers: number;
+        quality: number;
+        width: number;
+        height: number;
+        transparent?: number | null;
+        background?: number | null;
+      }) => {
+        on(event: 'progress', callback: (progress: number) => void): void;
+        on(event: 'finished', callback: (blob: Blob) => void): void;
+        addFrame: (canvas: CanvasRenderingContext2D, options: { copy: boolean; delay: number }) => void;
+        render: () => void;
+      };
+      
+      const gif = new GifConstructor({
         workers: 2,
         quality: 10,
         width: totalWidth,
@@ -114,6 +130,8 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
         // 绘制每个GIF到对应位置
         for (let gifIndex = 0; gifIndex < gifObjects.length; gifIndex++) {
           const gifObj = gifObjects[gifIndex];
+          if (!gifObj) continue; // 跳过空值
+          
           const col = gifIndex % cols;
           const row = Math.floor(gifIndex / cols);
           const x = col * maxWidth;
@@ -252,10 +270,13 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
           </h3>
           <div className="text-center space-y-4">
             <div className="relative inline-block">
-              <img
+              <Image
                 src={exportedGif}
                 alt="合并后的GIF"
+                width={300}
+                height={200}
                 className="max-w-full max-h-64 border border-gray-200 dark:border-gray-600 rounded"
+                unoptimized
               />
             </div>
             <button

@@ -1,9 +1,10 @@
 'use client';
 
+import { decompressFrames, parseGIF } from 'gifuct-js';
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { parseGIF, decompressFrames } from 'gifuct-js';
-import type { GifObject, GifFrame } from './types';
+
+import type { GifFrame, GifObject } from './types';
 
 interface GifUploaderProps {
   onFilesAdded: (gifObjects: GifObject[]) => void;

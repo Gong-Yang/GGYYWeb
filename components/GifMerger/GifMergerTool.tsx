@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { GifUploader } from './GifUploader';
-import { GifExporter } from './GifExporter';
+import Image from 'next/image';
+import React, { useCallback, useState } from 'react';
+
 import { FramePreview } from './FramePreview';
+import { GifExporter } from './GifExporter';
+import { GifUploader } from './GifUploader';
 import type { GifObject } from './types';
 
 export function GifMergerTool() {
@@ -122,7 +124,7 @@ export function GifMergerTool() {
 
           {/* 文件列表 */}
           <div className="space-y-6">
-            {gifObjects.map((gif, index) => (
+            {gifObjects.map((gif) => (
               <div
                 key={gif.id}
                 className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
@@ -131,10 +133,13 @@ export function GifMergerTool() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <div className="flex-shrink-0 w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded overflow-hidden">
-                      <img
+                      <Image
                         src={gif.url}
                         alt={gif.file.name}
+                        width={64}
+                        height={64}
                         className="w-full h-full object-cover"
+                        unoptimized
                       />
                     </div>
                     <div>
@@ -167,7 +172,7 @@ export function GifMergerTool() {
                       帧调试显示 ({gif.frames.length} 帧)
                     </h4>
                     <div className="grid grid-cols-8 gap-3 max-h-96 overflow-y-auto p-2 bg-white dark:bg-gray-800 rounded border">
-                      {gif.frames.map((frame: any, frameIndex: number) => (
+                      {gif.frames.map((frame: import('./types').GifFrame, frameIndex: number) => (
                         <FramePreview
                           key={frameIndex}
                           frame={frame}
