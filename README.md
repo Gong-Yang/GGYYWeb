@@ -26,7 +26,6 @@ pnpm install
 第四步：构建生产版本
 
 bash
-pnpm build
 pnpm dev # 启动开发服务
 第五步：启动生产服务
 
@@ -39,6 +38,9 @@ npm install -g pm2
 pm2 start "pnpm start" --name "webtool" --cwd /data/html/WebTool
 pm2 save
 pm2 startup
+
+git pull
+pnpm build
 pm2 reload webtool
 
 # [Next.js Enterprise Boilerplate](https://blazity.com/open-source/nextjs-enterprise-boilerplate) 
