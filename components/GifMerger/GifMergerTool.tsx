@@ -72,6 +72,132 @@ export function GifMergerTool() {
         <GifUploader onFilesAdded={handleFilesAdded} />
       </div>
 
+
+      {/* 已上传文件列表 */}
+      {gifObjects.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-600">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                已上传的GIF文件 ({gifObjects.length})
+              </h2>
+              <div className="flex items-center space-x-4">
+                <button
+                    onClick={() => setShowFrameDebug(!showFrameDebug)}
+                    className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                >
+                  {showFrameDebug ? '隐藏' : '显示'}帧调试
+                </button>
+                <button
+                    onClick={handleClearAll}
+                    className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                >
+                  清空所有
+                </button>
+              </div>
+            </div>
+
+            {/* 文件统计信息 */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="text-center">
+                <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {gifObjects.length}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">文件数量</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {totalFrames}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">最大帧数</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {formatTime(longestDuration)}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">最长时长</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {formatSize(totalSize)}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">总大小</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {Math.ceil(Math.sqrt(gifObjects.length))} × {Math.ceil(gifObjects.length / Math.ceil(Math.sqrt(gifObjects.length)))}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">网格布局</div>
+              </div>
+            </div>
+
+            {/* 文件列表 */}
+            <div className="space-y-6">
+              {gifObjects.map((gif) => (
+                  <div
+                      key={gif.id}
+                      className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                  >
+                    {/* 基本信息 */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-shrink-0 w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded overflow-hidden">
+                          <Image
+                              src={gif.url}
+                              alt={gif.file.name}
+                              width={64}
+                              height={64}
+                              className="w-full h-full object-cover"
+                              unoptimized
+                          />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white truncate max-w-xs">
+                            {gif.file.name}
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {gif.width} × {gif.height} • {gif.frameCount} 帧 • {formatSize(gif.file.size)}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            时长: {formatTime(gif.totalDuration)} • 平均帧延迟: {Math.round(gif.totalDuration / gif.frameCount)}ms
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                          onClick={() => handleRemoveGif(gif.id)}
+                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1"
+                          title="移除文件"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* 帧调试显示 */}
+                    {showFrameDebug && gif.frames && gif.frames.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                            帧调试显示 ({gif.frames.length} 帧)
+                          </h4>
+                          <div className="grid grid-cols-8 gap-3 max-h-96 overflow-y-auto p-2 bg-white dark:bg-gray-800 rounded border">
+                            {gif.frames.map((frame: import('./types').GifFrame, frameIndex: number) => (
+                                <FramePreview
+                                    key={frameIndex}
+                                    frame={frame}
+                                    frameIndex={frameIndex}
+                                    gifWidth={gif.width}
+                                    gifHeight={gif.height}
+                                />
+                            ))}
+                          </div>
+                        </div>
+                    )}
+                  </div>
+              ))}
+            </div>
+          </div>
+      )}
+
       {/* 水印上传区域 */}
       {gifObjects.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-600">
@@ -88,130 +214,6 @@ export function GifMergerTool() {
         </div>
       )}
 
-      {/* 已上传文件列表 */}
-      {gifObjects.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-600">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              已上传的GIF文件 ({gifObjects.length})
-            </h2>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setShowFrameDebug(!showFrameDebug)}
-                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-              >
-                {showFrameDebug ? '隐藏' : '显示'}帧调试
-              </button>
-              <button
-                onClick={handleClearAll}
-                className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-              >
-                清空所有
-              </button>
-            </div>
-          </div>
-
-          {/* 文件统计信息 */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <div className="text-center">
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                {gifObjects.length}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">文件数量</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                {totalFrames}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">最大帧数</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                {formatTime(longestDuration)}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">最长时长</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                {formatSize(totalSize)}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">总大小</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                {Math.ceil(Math.sqrt(gifObjects.length))} × {Math.ceil(gifObjects.length / Math.ceil(Math.sqrt(gifObjects.length)))}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">网格布局</div>
-            </div>
-          </div>
-
-          {/* 文件列表 */}
-          <div className="space-y-6">
-            {gifObjects.map((gif) => (
-              <div
-                key={gif.id}
-                className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
-              >
-                {/* 基本信息 */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-shrink-0 w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded overflow-hidden">
-                      <Image
-                        src={gif.url}
-                        alt={gif.file.name}
-                        width={64}
-                        height={64}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                      />
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-white truncate max-w-xs">
-                        {gif.file.name}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {gif.width} × {gif.height} • {gif.frameCount} 帧 • {formatSize(gif.file.size)}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        时长: {formatTime(gif.totalDuration)} • 平均帧延迟: {Math.round(gif.totalDuration / gif.frameCount)}ms
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleRemoveGif(gif.id)}
-                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1"
-                    title="移除文件"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                
-                {/* 帧调试显示 */}
-                {showFrameDebug && gif.frames && gif.frames.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      帧调试显示 ({gif.frames.length} 帧)
-                    </h4>
-                    <div className="grid grid-cols-8 gap-3 max-h-96 overflow-y-auto p-2 bg-white dark:bg-gray-800 rounded border">
-                      {gif.frames.map((frame: import('./types').GifFrame, frameIndex: number) => (
-                        <FramePreview
-                          key={frameIndex}
-                          frame={frame}
-                          frameIndex={frameIndex}
-                          gifWidth={gif.width}
-                          gifHeight={gif.height}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* GIF导出区域 */}
       {gifObjects.length > 0 && (

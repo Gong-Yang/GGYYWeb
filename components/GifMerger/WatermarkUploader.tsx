@@ -230,20 +230,20 @@ export function WatermarkUploader({ onWatermarkChanged, gifObjects }: WatermarkU
           <div className="flex justify-end">
             <button
               onClick={handleAddNewWatermark}
-              className="flex items-center text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              className="flex items-center text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 relative"
             >
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
               添加新水印
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png"
+                onChange={(e) => handleFileSelect(e.target.files)}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
             </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png"
-              onChange={(e) => handleFileSelect(e.target.files)}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
           </div>
           
           {/* 水印列表 */}
