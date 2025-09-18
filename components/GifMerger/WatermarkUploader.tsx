@@ -64,16 +64,23 @@ export function WatermarkUploader({ onWatermarkChanged, gifObjects }: WatermarkU
   const handleFileSelect = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    const file = files[0];
-    if (!file) return;
+    // 处理多个文件
+    const newWatermarks: WatermarkInfo[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file) continue;
+      
+      const watermarkInfo = await processFile(file);
+      if (watermarkInfo) {
+        newWatermarks.push(watermarkInfo);
+      }
+    }
     
-    const watermarkInfo = await processFile(file);
-    
-    if (watermarkInfo) {
+    if (newWatermarks.length > 0) {
       setWatermarks(prev => {
-        const newWatermarks = [...prev, watermarkInfo];
-        onWatermarkChanged(newWatermarks);
-        return newWatermarks;
+        const updatedWatermarks = [...prev, ...newWatermarks];
+        onWatermarkChanged(updatedWatermarks);
+        return updatedWatermarks;
       });
     }
   }, [processFile, onWatermarkChanged]);
@@ -190,10 +197,6 @@ export function WatermarkUploader({ onWatermarkChanged, gifObjects }: WatermarkU
     });
   }, [gifObjects, onWatermarkChanged]);
 
-  // 处理添加新水印
-  const handleAddNewWatermark = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
 
   return (
     <div className="space-y-4">
@@ -214,13 +217,14 @@ export function WatermarkUploader({ onWatermarkChanged, gifObjects }: WatermarkU
             accept="image/png"
             onChange={(e) => handleFileSelect(e.target.files)}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            multiple // 支持多选
           />
           <div className="text-gray-500 dark:text-gray-400">
             <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
             <p className="text-lg font-medium mb-2">拖拽PNG水印图片到此处</p>
-            <p className="text-sm">或点击选择文件</p>
+            <p className="text-sm">或点击选择文件（可多选）</p>
             <p className="text-xs mt-2 text-gray-400">仅支持PNG格式，建议使用透明背景</p>
           </div>
         </div>
@@ -229,7 +233,6 @@ export function WatermarkUploader({ onWatermarkChanged, gifObjects }: WatermarkU
           {/* 添加新水印按钮 */}
           <div className="flex justify-end">
             <button
-              onClick={handleAddNewWatermark}
               className="flex items-center text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 relative"
             >
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -242,6 +245,7 @@ export function WatermarkUploader({ onWatermarkChanged, gifObjects }: WatermarkU
                 accept="image/png"
                 onChange={(e) => handleFileSelect(e.target.files)}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                multiple // 支持多选
               />
             </button>
           </div>
