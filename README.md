@@ -4,11 +4,13 @@
 bash
 # 安装 Node.js (建议使用 nvm)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-nvm install 20
-nvm use 20
+nvm install --lts
+nvm use --lts
 
 # 启用 Corepack
 corepack enable
+corepack enable npm
+
 第二步：上传项目代码
 
 bash
@@ -25,6 +27,7 @@ pnpm install
 
 bash
 pnpm build
+pnpm dev # 启动开发服务
 第五步：启动生产服务
 
 bash
@@ -36,7 +39,7 @@ npm install -g pm2
 pm2 start "pnpm start" --name "webtool" --cwd /data/html/WebTool
 pm2 save
 pm2 startup
-
+pm2 reload webtool
 
 # [Next.js Enterprise Boilerplate](https://blazity.com/open-source/nextjs-enterprise-boilerplate) 
 
