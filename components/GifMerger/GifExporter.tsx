@@ -188,8 +188,8 @@ export function GifExporter({ gifObjects, watermark, disabled = false }: GifExpo
             const offsetX = (maxWidth - gifObj.width) / 2;
             const offsetY = (maxHeight - gifObj.height) / 2;
             
-            // 获取当前帧数据（如果帧数不足，使用最后一帧）
-            const actualFrameIndex = Math.min(frameIndex, gifObj.frameCount - 1);
+            // 获取当前帧数据（如果帧数不足，使用第一帧）
+            const actualFrameIndex = frameIndex < gifObj.frameCount ? frameIndex : 0;
             const frameData = gifObj.frames[actualFrameIndex];
             
             if (frameData) {
@@ -297,7 +297,7 @@ export function GifExporter({ gifObjects, watermark, disabled = false }: GifExpo
   return (
     <div className="space-y-6">
       {/* 导出选项 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             背景颜色
@@ -326,6 +326,25 @@ export function GifExporter({ gifObjects, watermark, disabled = false }: GifExpo
             onChange={(e) => setOptions((prev: MergeOptions) => ({ ...prev, frameDuration: parseInt(e.target.value) || 100 }))}
             className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            网格列数（仅平面合并）
+          </label>
+          <input
+            type="number"
+            min="0"
+            max="10"
+            step="1"
+            value={options.columns || ''}
+            onChange={(e) => setOptions((prev: MergeOptions) => ({ ...prev, columns: parseInt(e.target.value) || undefined }))}
+            placeholder="自动计算"
+            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            留空或0时自动计算最佳布局
+          </p>
         </div>
       </div>
 
