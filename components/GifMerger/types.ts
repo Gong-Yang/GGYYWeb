@@ -15,8 +15,19 @@ export interface GifObject {
   frameCount: number; // 总帧数
 }
 
+export interface WatermarkInfo {
+  id: string;
+  file: File;
+  url: string;
+  width: number;
+  height: number;
+  layer: 'top' | 'bottom'; // 最顶层或最底层
+}
+
 export interface MergeOptions {
   backgroundColor: 'transparent' | 'white' | 'black';
   columns?: number; // 网格列数，不指定时自动计算
   frameDuration: number; // 合并后的帧持续时间（毫秒）
+  watermark?: WatermarkInfo | null; // 水印信息
+  mergeMode?: 'grid' | 'sequence'; // 合并模式：网格平面合并或连续播放合并（可选，为了类型兼容性）
 }

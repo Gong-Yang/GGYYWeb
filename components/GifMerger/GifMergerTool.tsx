@@ -6,15 +6,22 @@ import React, { useCallback, useState } from 'react';
 import { FramePreview } from './FramePreview';
 import { GifExporter } from './GifExporter';
 import { GifUploader } from './GifUploader';
-import type { GifObject } from './types';
+import { WatermarkUploader } from './WatermarkUploader';
+import type { GifObject, WatermarkInfo } from './types';
 
 export function GifMergerTool() {
   const [gifObjects, setGifObjects] = useState<GifObject[]>([]);
+  const [watermark, setWatermark] = useState<WatermarkInfo | null>(null);
   const [showFrameDebug, setShowFrameDebug] = useState(false);
 
   // 处理文件添加
   const handleFilesAdded = useCallback((newGifObjects: GifObject[]) => {
     setGifObjects(prev => [...prev, ...newGifObjects]);
+  }, []);
+
+  // 处理水印变化
+  const handleWatermarkChanged = useCallback((newWatermark: WatermarkInfo | null) => {
+    setWatermark(newWatermark);
   }, []);
 
   // 移除GIF文件
@@ -64,6 +71,19 @@ export function GifMergerTool() {
         </h2>
         <GifUploader onFilesAdded={handleFilesAdded} />
       </div>
+
+      {/* 水印上传区域 */}
+      {gifObjects.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-600">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+            水印设置（可选）
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            上传PNG格式的水印图片，支持透明背景。水印将覆盖在所有GIF内容上。
+          </p>
+          <WatermarkUploader onWatermarkChanged={handleWatermarkChanged} />
+        </div>
+      )}
 
       {/* 已上传文件列表 */}
       {gifObjects.length > 0 && (
@@ -196,7 +216,7 @@ export function GifMergerTool() {
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             合并导出
           </h2>
-          <GifExporter gifObjects={gifObjects} />
+          <GifExporter gifObjects={gifObjects} watermark={watermark} />
         </div>
       )}
 

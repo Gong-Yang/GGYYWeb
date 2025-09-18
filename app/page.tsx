@@ -20,8 +20,8 @@ export const metadata: Metadata = {
 const TOOLS = [
   {
     id: "gif-merger",
-    name: "GIF 合并工具",
-    description: "将多个 GIF 文件合并为一个，支持自定义帧率和尺寸调整",
+    name: "GIF 工具",
+    description: "GIF加水印、将多个 GIF 文件平面合并 或者 连续播放，支持自定义帧率和尺寸调整",
     href: "/gif-merger",
     icon: (
       <svg

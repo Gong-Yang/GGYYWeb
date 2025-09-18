@@ -33,7 +33,7 @@ pnpm start
 
 # 或使用 PM2 进程管理器（推荐）
 npm install -g pm2
-pm2 start npm --name "next-enterprise" -- start
+pm2 start "pnpm start" --name "webtool" --cwd /data/html/WebTool
 pm2 save
 pm2 startup
 

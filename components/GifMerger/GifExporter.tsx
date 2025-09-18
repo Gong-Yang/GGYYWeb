@@ -2,20 +2,23 @@
 
 import Image from 'next/image';
 import React, { useCallback, useState } from 'react';
-import type { GifObject, MergeOptions } from './types';
+import type { GifObject, MergeOptions, WatermarkInfo } from './types';
 
 interface GifExporterProps {
   gifObjects: GifObject[];
+  watermark?: WatermarkInfo | null;
   disabled?: boolean;
 }
 
-export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) {
+export function GifExporter({ gifObjects, watermark, disabled = false }: GifExporterProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [exportedGif, setExportedGif] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [options, setOptions] = useState<MergeOptions>({
     backgroundColor: 'transparent',
-    frameDuration: 100
+    frameDuration: 100,
+    watermark: null,
+    mergeMode: 'grid' // 保留但不使用，只是为了类型兼容性
   });
 
   // 动态加载gif.js
@@ -41,7 +44,17 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
     });
   }, []);
 
-  const exportGif = useCallback(async () => {
+  // 加载水印图片
+  const loadWatermarkImage = useCallback(async (watermarkInfo: WatermarkInfo): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('水印图片加载失败'));
+      img.src = watermarkInfo.url;
+    });
+  }, []);
+
+  const exportGif = useCallback(async (mergeMode: 'grid' | 'sequence') => {
     if (gifObjects.length === 0) {
       alert('请先上传GIF文件');
       return;
@@ -57,24 +70,44 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
       
       console.log('开始合并', gifObjects.length, '个GIF文件');
 
-      // 计算网格布局
-      const cols = options.columns || Math.ceil(Math.sqrt(gifObjects.length));
-      const rows = Math.ceil(gifObjects.length / cols);
-      const maxWidth = Math.max(...gifObjects.map(g => g.width));
-      const maxHeight = Math.max(...gifObjects.map(g => g.height));
-      const totalWidth = cols * maxWidth;
-      const totalHeight = rows * maxHeight;
+      // 加载水印图片
+      let watermarkImage: HTMLImageElement | null = null;
+      if (watermark) {
+        try {
+          watermarkImage = await loadWatermarkImage(watermark);
+          console.log('水印图片加载成功:', watermark.file.name);
+        } catch (error) {
+          console.error('水印图片加载失败:', error);
+          alert('水印图片加载失败，将继续合并不含水印的GIF');
+        }
+      }
 
-      // 计算总帧数（以最多帧数为准）
-      const maxFrameCount = Math.max(...gifObjects.map(g => g.frameCount));
+      // 计算画布尺寸和帧数
+      let totalWidth: number, totalHeight: number, totalFrames: number;
+      
+      if (mergeMode === 'grid') {
+        // 网格合并模式
+        const cols = options.columns || Math.ceil(Math.sqrt(gifObjects.length));
+        const rows = Math.ceil(gifObjects.length / cols);
+        const maxWidth = Math.max(...gifObjects.map(g => g.width));
+        const maxHeight = Math.max(...gifObjects.map(g => g.height));
+        totalWidth = cols * maxWidth;
+        totalHeight = rows * maxHeight;
+        totalFrames = Math.max(...gifObjects.map(g => g.frameCount));
+      } else {
+        // 连续播放合并模式
+        totalWidth = Math.max(...gifObjects.map(g => g.width));
+        totalHeight = Math.max(...gifObjects.map(g => g.height));
+        totalFrames = gifObjects.reduce((sum, g) => sum + g.frameCount, 0);
+      }
       
       console.log('合并参数:', { 
         totalWidth, 
         totalHeight, 
-        cols, 
-        rows, 
-        maxFrameCount,
-        backgroundColor: options.backgroundColor
+        totalFrames,
+        mergeMode: mergeMode,
+        backgroundColor: options.backgroundColor,
+        hasWatermark: !!watermarkImage
       });
 
       // 创建gif.js实例
@@ -118,7 +151,7 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
       }
 
       // 生成所有合成帧
-      for (let frameIndex = 0; frameIndex < maxFrameCount; frameIndex++) {
+      for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
         // 设置背景
         if (options.backgroundColor === 'transparent') {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -127,36 +160,97 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
           ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
         
-        // 绘制每个GIF到对应位置
-        for (let gifIndex = 0; gifIndex < gifObjects.length; gifIndex++) {
-          const gifObj = gifObjects[gifIndex];
-          if (!gifObj) continue; // 跳过空值
+        // 绘制底层水印（如果设置为底层）
+        if (watermarkImage && watermark?.layer === 'bottom') {
+          // 将水印绘制在画布中央
+          const watermarkX = (totalWidth - watermark.width) / 2;
+          const watermarkY = (totalHeight - watermark.height) / 2;
+          ctx.drawImage(watermarkImage, watermarkX, watermarkY);
+        }
+        
+        if (mergeMode === 'grid') {
+          // 网格合并模式
+          const cols = options.columns || Math.ceil(Math.sqrt(gifObjects.length));
+          const maxWidth = Math.max(...gifObjects.map(g => g.width));
+          const maxHeight = Math.max(...gifObjects.map(g => g.height));
           
-          const col = gifIndex % cols;
-          const row = Math.floor(gifIndex / cols);
-          const x = col * maxWidth;
-          const y = row * maxHeight;
-          
-          // 居中绘制
-          const offsetX = (maxWidth - gifObj.width) / 2;
-          const offsetY = (maxHeight - gifObj.height) / 2;
-          
-          // 获取当前帧数据（如果帧数不足，使用最后一帧）
-          const actualFrameIndex = Math.min(frameIndex, gifObj.frameCount - 1);
-          const frameData = gifObj.frames[actualFrameIndex];
-          
-          if (frameData) {
-            // 创建临时画布绘制单个GIF帧
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = gifObj.width;
-            tempCanvas.height = gifObj.height;
-            const tempCtx = tempCanvas.getContext('2d');
+          // 绘制每个GIF到对应位置
+          for (let gifIndex = 0; gifIndex < gifObjects.length; gifIndex++) {
+            const gifObj = gifObjects[gifIndex];
+            if (!gifObj) continue;
             
-            if (tempCtx) {
-              tempCtx.putImageData(frameData.imageData, 0, 0);
-              ctx.drawImage(tempCanvas, x + offsetX, y + offsetY);
+            const col = gifIndex % cols;
+            const row = Math.floor(gifIndex / cols);
+            const x = col * maxWidth;
+            const y = row * maxHeight;
+            
+            // 居中绘制
+            const offsetX = (maxWidth - gifObj.width) / 2;
+            const offsetY = (maxHeight - gifObj.height) / 2;
+            
+            // 获取当前帧数据（如果帧数不足，使用最后一帧）
+            const actualFrameIndex = Math.min(frameIndex, gifObj.frameCount - 1);
+            const frameData = gifObj.frames[actualFrameIndex];
+            
+            if (frameData) {
+              // 创建临时画布绘制单个GIF帧
+              const tempCanvas = document.createElement('canvas');
+              tempCanvas.width = gifObj.width;
+              tempCanvas.height = gifObj.height;
+              const tempCtx = tempCanvas.getContext('2d');
+              
+              if (tempCtx) {
+                tempCtx.putImageData(frameData.imageData, 0, 0);
+                ctx.drawImage(tempCanvas, x + offsetX, y + offsetY);
+              }
             }
           }
+        } else {
+          // 连续播放合并模式
+          let currentFrameIndex = frameIndex;
+          let selectedGifIndex = 0;
+          
+          // 找到对应的GIF和帧
+          for (let i = 0; i < gifObjects.length; i++) {
+            const gifObj = gifObjects[i];
+            if (gifObj && currentFrameIndex < gifObj.frameCount) {
+              selectedGifIndex = i;
+              break;
+            }
+            if (gifObj) {
+              currentFrameIndex -= gifObj.frameCount;
+            }
+          }
+          
+          const selectedGif = gifObjects[selectedGifIndex];
+          if (selectedGif && currentFrameIndex < selectedGif.frameCount) {
+            const frameData = selectedGif.frames[currentFrameIndex];
+            
+            if (frameData) {
+              // 居中绘制当前GIF的帧
+              const offsetX = (totalWidth - selectedGif.width) / 2;
+              const offsetY = (totalHeight - selectedGif.height) / 2;
+              
+              // 创建临时画布绘制单个GIF帧
+              const tempCanvas = document.createElement('canvas');
+              tempCanvas.width = selectedGif.width;
+              tempCanvas.height = selectedGif.height;
+              const tempCtx = tempCanvas.getContext('2d');
+              
+              if (tempCtx) {
+                tempCtx.putImageData(frameData.imageData, 0, 0);
+                ctx.drawImage(tempCanvas, offsetX, offsetY);
+              }
+            }
+          }
+        }
+        
+        // 绘制顶层水印（如果设置为顶层）
+        if (watermarkImage && watermark?.layer === 'top') {
+          // 将水印绘制在画布中央
+          const watermarkX = (totalWidth - watermark.width) / 2;
+          const watermarkY = (totalHeight - watermark.height) / 2;
+          ctx.drawImage(watermarkImage, watermarkX, watermarkY);
         }
         
         // 添加帧到GIF
@@ -166,11 +260,11 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
         });
         
         // 更新进度（生成帧阶段）
-        const frameProgress = (frameIndex + 1) / maxFrameCount * 50; // 50%用于帧生成
+        const frameProgress = (frameIndex + 1) / totalFrames * 50; // 50%用于帧生成
         setProgress(Math.round(frameProgress));
       }
 
-      console.log(`所有${maxFrameCount}帧已添加，开始渲染GIF`);
+      console.log(`所有${totalFrames}帧已添加，开始渲染GIF`);
 
       // 渲染GIF
       gif.on('finished', (blob: Blob) => {
@@ -189,7 +283,7 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
       setIsExporting(false);
       setProgress(0);
     }
-  }, [gifObjects, options, loadGifJs]);
+  }, [gifObjects, options, watermark, loadGifJs, loadWatermarkImage]);
 
   const downloadGif = useCallback(() => {
     if (exportedGif) {
@@ -235,15 +329,53 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
         </div>
       </div>
 
+      {/* 水印状态显示 */}
+      {watermark && (
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+          <div className="flex items-center space-x-3">
+            <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <div>
+              <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                水印已设置：{watermark.file.name}
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-400">
+                层级：{watermark.layer === 'top' ? '最顶层' : '最底层'} • 尺寸：{watermark.width} × {watermark.height}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 导出按钮 */}
-      <div className="text-center">
+      <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <button
-          onClick={exportGif}
+          onClick={() => exportGif('grid')}
           disabled={disabled || isExporting || gifObjects.length === 0}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors"
+          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors flex-1 sm:flex-none"
         >
-          {isExporting ? `合并中... ${progress}%` : '合并GIF'}
+          {isExporting ? `合并中... ${progress}%` : watermark ? '平面合并GIF（含水印）' : '平面合并GIF'}
         </button>
+        <button
+          onClick={() => exportGif('sequence')}
+          disabled={disabled || isExporting || gifObjects.length === 0}
+          className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors flex-1 sm:flex-none"
+        >
+          {isExporting ? `合并中... ${progress}%` : watermark ? '连续播放合并GIF（含水印）' : '连续播放合并GIF'}
+        </button>
+      </div>
+      
+      {/* 按钮说明 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
+        <div className="text-center">
+          <div className="font-medium text-blue-600 dark:text-blue-400 mb-1">平面合并</div>
+          <div>所有GIF同时显示在网格布局中</div>
+        </div>
+        <div className="text-center">
+          <div className="font-medium text-green-600 dark:text-green-400 mb-1">连续播放</div>
+          <div>按顺序连续播放每个GIF</div>
+        </div>
       </div>
 
       {/* 进度条 */}
@@ -291,11 +423,32 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
 
       {/* 使用说明 */}
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-400">
-        <h4 className="font-medium mb-2">技术特性：</h4>
+        <h4 className="font-medium mb-2">合并模式说明：</h4>
+        <div className="space-y-2">
+          <div>
+            <strong className="text-gray-900 dark:text-white">网格平面合并：</strong>
+            <ul className="ml-4 mt-1 space-y-1">
+              <li>• 所有GIF同时显示在同一画面中</li>
+              <li>• 自动网格排列布局</li>
+              <li>• 以最长GIF为播放周期</li>
+              <li>• 支持PNG水印叠加</li>
+            </ul>
+          </div>
+          <div>
+            <strong className="text-gray-900 dark:text-white">连续播放合并：</strong>
+            <ul className="ml-4 mt-1 space-y-1">
+              <li>• 按上传顺序连续播放每个GIF</li>
+              <li>• 合并为一个连续的长动画</li>
+              <li>• 各GIF保持原始尺寸和帧率</li>
+              <li>• 水印将显示在整个播放过程中</li>
+            </ul>
+          </div>
+        </div>
+        <h4 className="font-medium mt-4 mb-2">技术特性：</h4>
         <ul className="space-y-1">
           <li>• 保持原始动画时序和帧延迟</li>
           <li>• 支持透明背景和颜色背景</li>
-          <li>• 以最长GIF为播放周期，短GIF定格在最后一帧</li>
+          <li>• 支持PNG水印，可设置为最顶层或最底层</li>
           <li>• 实时进度显示</li>
         </ul>
       </div>
