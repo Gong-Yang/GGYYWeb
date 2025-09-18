@@ -232,7 +232,7 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
             }
           }
           
-          // 绘制每个GIF到对应位置
+          // 绘制每个GIF到对应位置（同时处理选择模式的负层级水印）
           for (let gifIndex = 0; gifIndex < gifObjects.length; gifIndex++) {
             const gifObj = gifObjects[gifIndex];
             if (!gifObj) continue;
@@ -246,48 +246,17 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
             const offsetX = (maxWidth - gifObj.width) / 2;
             const offsetY = (maxHeight - gifObj.height) / 2;
             
-            // 获取当前帧数据（如果帧数不足，使用第一帧）
-            const actualFrameIndex = frameIndex < gifObj.frameCount ? frameIndex : 0;
-            const frameData = gifObj.frames[actualFrameIndex];
+            // 计算当前GIF在画布上的位置
+            const gifX = x + offsetX;
+            const gifY = y + offsetY;
             
-            if (frameData) {
-              // 创建临时画布绘制单个GIF帧
-              const tempCanvas = document.createElement('canvas');
-              tempCanvas.width = gifObj.width;
-              tempCanvas.height = gifObj.height;
-              const tempCtx = tempCanvas.getContext('2d');
-              
-              if (tempCtx) {
-                tempCtx.putImageData(frameData.imageData, 0, 0);
-                ctx.drawImage(tempCanvas, x + offsetX, y + offsetY);
-              }
-            }
-          }
-          
-          // 绘制选择模式的水印（层级小于0的水印）
-          for (let gifIndex = 0; gifIndex < gifObjects.length; gifIndex++) {
-            const gifObj = gifObjects[gifIndex];
-            if (!gifObj) continue;
-            
-            const col = gifIndex % cols;
-            const row = Math.floor(gifIndex / cols);
-            const x = col * maxWidth;
-            const y = row * maxHeight;
-            
-            // 居中绘制偏移量
-            const offsetX = (maxWidth - gifObj.width) / 2;
-            const offsetY = (maxHeight - gifObj.height) / 2;
-            
+            // 对于选择模式的负层级水印，在绘制GIF之前绘制
             for (const watermark of bottomWatermarks) {
               const watermarkImage = watermarkImages[watermark.id];
               if (!watermarkImage) continue;
               
               // 如果是选择模式且当前GIF在选择列表中，绘制水印
               if (Array.isArray(watermark.target) && watermark.target.includes(gifObj.id)) {
-                // 计算当前GIF在画布上的位置和尺寸
-                const gifX = x + offsetX;
-                const gifY = y + offsetY;
-                
                 // 保存当前上下文
                 ctx.save();
                 
@@ -303,6 +272,23 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
                 
                 // 恢复上下文
                 ctx.restore();
+              }
+            }
+            
+            // 获取当前帧数据（如果帧数不足，使用第一帧）
+            const actualFrameIndex = frameIndex < gifObj.frameCount ? frameIndex : 0;
+            const frameData = gifObj.frames[actualFrameIndex];
+            
+            if (frameData) {
+              // 创建临时画布绘制单个GIF帧
+              const tempCanvas = document.createElement('canvas');
+              tempCanvas.width = gifObj.width;
+              tempCanvas.height = gifObj.height;
+              const tempCtx = tempCanvas.getContext('2d');
+              
+              if (tempCtx) {
+                tempCtx.putImageData(frameData.imageData, 0, 0);
+                ctx.drawImage(tempCanvas, gifX, gifY);
               }
             }
           }
@@ -336,16 +322,16 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
             const offsetX = (maxWidth - gifObj.width) / 2;
             const offsetY = (maxHeight - gifObj.height) / 2;
             
+            // 计算当前GIF在画布上的位置
+            const gifX = x + offsetX;
+            const gifY = y + offsetY;
+            
             for (const watermark of middleWatermarks) {
               const watermarkImage = watermarkImages[watermark.id];
               if (!watermarkImage) continue;
               
               // 如果是选择模式且当前GIF在选择列表中，绘制水印
               if (Array.isArray(watermark.target) && watermark.target.includes(gifObj.id)) {
-                // 计算当前GIF在画布上的位置和尺寸
-                const gifX = x + offsetX;
-                const gifY = y + offsetY;
-                
                 // 保存当前上下文
                 ctx.save();
                 
@@ -394,16 +380,16 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
             const offsetX = (maxWidth - gifObj.width) / 2;
             const offsetY = (maxHeight - gifObj.height) / 2;
             
+            // 计算当前GIF在画布上的位置
+            const gifX = x + offsetX;
+            const gifY = y + offsetY;
+            
             for (const watermark of topWatermarks) {
               const watermarkImage = watermarkImages[watermark.id];
               if (!watermarkImage) continue;
               
               // 如果是选择模式且当前GIF在选择列表中，绘制水印
               if (Array.isArray(watermark.target) && watermark.target.includes(gifObj.id)) {
-                // 计算当前GIF在画布上的位置和尺寸
-                const gifX = x + offsetX;
-                const gifY = y + offsetY;
-                
                 // 保存当前上下文
                 ctx.save();
                 
