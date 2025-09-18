@@ -11,7 +11,7 @@ import type { GifObject, WatermarkInfo } from './types';
 
 export function GifMergerTool() {
   const [gifObjects, setGifObjects] = useState<GifObject[]>([]);
-  const [watermark, setWatermark] = useState<WatermarkInfo | null>(null);
+  const [watermarks, setWatermarks] = useState<WatermarkInfo[]>([]);
   const [showFrameDebug, setShowFrameDebug] = useState(false);
 
   // 处理文件添加
@@ -20,8 +20,8 @@ export function GifMergerTool() {
   }, []);
 
   // 处理水印变化
-  const handleWatermarkChanged = useCallback((newWatermark: WatermarkInfo | null) => {
-    setWatermark(newWatermark);
+  const handleWatermarkChanged = useCallback((newWatermarks: WatermarkInfo[]) => {
+    setWatermarks(newWatermarks);
   }, []);
 
   // 移除GIF文件
@@ -81,7 +81,10 @@ export function GifMergerTool() {
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             上传PNG格式的水印图片，支持透明背景。水印将覆盖在所有GIF内容上。
           </p>
-          <WatermarkUploader onWatermarkChanged={handleWatermarkChanged} />
+          <WatermarkUploader 
+            onWatermarkChanged={handleWatermarkChanged} 
+            gifObjects={gifObjects.map(gif => ({ id: gif.id, file: gif.file, url: gif.url }))}
+          />
         </div>
       )}
 
@@ -216,7 +219,7 @@ export function GifMergerTool() {
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             合并导出
           </h2>
-          <GifExporter gifObjects={gifObjects} watermark={watermark} />
+          <GifExporter gifObjects={gifObjects} watermarks={watermarks} />
         </div>
       )}
 
