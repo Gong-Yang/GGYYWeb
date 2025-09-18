@@ -40,7 +40,9 @@ pm2 save
 pm2 startup
 
 git pull
+
 pnpm build
+
 pm2 reload webtool
 
 # [Next.js Enterprise Boilerplate](https://blazity.com/open-source/nextjs-enterprise-boilerplate) 
