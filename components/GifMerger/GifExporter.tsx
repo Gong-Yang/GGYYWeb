@@ -69,7 +69,7 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
       }
 
       const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js';
+      script.src = '/gif.js';
       script.onload = () => {
         if (globalWindow.GIF) {
           resolve(globalWindow.GIF);
