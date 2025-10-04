@@ -48,7 +48,9 @@ export const metadata: Metadata = {
   verification: {
     // 添加搜索引擎验证标签
     google: '2f8a254096e7d7f6',
-    // baidu: 'your-baidu-verification-code',
+    other: {
+      'baidu-site-verification': '4f075dde2fc5a24f72f76ca64d4d07e6',
+    },
   },
 }
 
