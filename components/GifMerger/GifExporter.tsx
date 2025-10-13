@@ -54,7 +54,7 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
   const [exportedGif, setExportedGif] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [options, setOptions] = useState<Omit<MergeOptions, 'watermarks'> & { watermarks?: WatermarkInfo[] }>({
-    backgroundColor: 'transparent',
+    backgroundColor: 'original',
     frameDuration: 100,
     mergeMode: 'grid' // 保留但不使用，只是为了类型兼容性
   });
@@ -194,9 +194,14 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
       // 生成所有合成帧
       for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
         // 设置背景
+        /*
+         “原图背景” 不做处理
+         “透明背景” 清空画布
+         “白底、黑色背景” 填充画布
+        */
         if (options.backgroundColor === 'transparent') {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
-        } else {
+        } else if (options.backgroundColor === 'black' || options.backgroundColor === 'white') {
           ctx.fillStyle = options.backgroundColor === 'white' ? '#ffffff' : '#000000';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
@@ -587,9 +592,10 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
           </label>
           <select
             value={options.backgroundColor}
-            onChange={(e) => setOptions((prev) => ({ ...prev, backgroundColor: e.target.value as 'transparent' | 'white' | 'black' }))}
+            onChange={(e) => setOptions((prev) => ({ ...prev, backgroundColor: e.target.value as 'transparent' | 'white' | 'black' | 'original' }))}
             className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
+            <option value="original">原图背景</option>
             <option value="transparent">透明</option>
             <option value="white">白色</option>
             <option value="black">黑色</option>

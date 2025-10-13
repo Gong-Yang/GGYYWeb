@@ -30,7 +30,7 @@ export interface WatermarkInfo {
 
 // 更新MergeOptions接口以支持多个水印
 export interface MergeOptions {
-  backgroundColor: 'transparent' | 'white' | 'black';
+  backgroundColor: 'transparent' | 'white' | 'black' | 'original';
   columns?: number; // 网格列数，不指定时自动计算
   frameDuration: number; // 合并后的帧持续时间（毫秒）
   watermarks?: WatermarkInfo[]; // 支持多个水印
