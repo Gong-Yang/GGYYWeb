@@ -26,8 +26,8 @@ export const metadata: Metadata = {
 
 export default function GifMergerPage() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
+    <div className="bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             GIF处理工具
@@ -38,7 +38,6 @@ export default function GifMergerPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">精确帧解析</span>
-            <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">PNG水印支持</span>
             <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">透明背景支持</span>
             <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">时序同步</span>
             <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">标准GIF输出</span>

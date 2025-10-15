@@ -6,13 +6,14 @@ import React, { useCallback, useState } from 'react';
 import { FramePreview } from './FramePreview';
 import { GifExporter } from './GifExporter';
 import { GifUploader } from './GifUploader';
-import { WatermarkUploader } from './WatermarkUploader';
+// import { WatermarkUploader } from './WatermarkUploader';
 import type { GifObject, WatermarkInfo } from './types';
 
 export function GifMergerTool() {
   const [gifObjects, setGifObjects] = useState<GifObject[]>([]);
   const [watermarks, setWatermarks] = useState<WatermarkInfo[]>([]);
   const [showFrameDebug, setShowFrameDebug] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // 处理文件添加
   const handleFilesAdded = useCallback((newGifObjects: GifObject[]) => {
@@ -44,6 +45,58 @@ export function GifMergerTool() {
     });
     setGifObjects([]);
   }, [gifObjects]);
+
+  // 处理拖拽开始
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', (e.currentTarget as HTMLElement).outerHTML);
+    (e.currentTarget as HTMLElement).style.opacity = '0.5';
+  }, []);
+
+  // 处理拖拽结束
+  const handleDragEnd = useCallback((e: React.DragEvent) => {
+    (e.currentTarget as HTMLElement).style.opacity = '1';
+    setDraggedIndex(null);
+  }, []);
+
+  // 处理拖拽悬停
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  // 处理拖拽进入
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  // 处理拖拽放下
+  const handleDrop = useCallback((e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      return;
+    }
+
+    setGifObjects(prev => {
+      const newGifObjects = [...prev];
+      const draggedItem = newGifObjects[draggedIndex];
+      
+      if (!draggedItem) {
+        return prev;
+      }
+      
+      // 移除被拖拽的项目
+      newGifObjects.splice(draggedIndex, 1);
+      
+      // 在新位置插入项目
+      const insertIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+      newGifObjects.splice(insertIndex, 0, draggedItem);
+      
+      return newGifObjects;
+    });
+  }, [draggedIndex]);
 
   // 计算统计信息
   const totalFrames = Math.max(...gifObjects.map(gif => gif.frameCount), 0);
@@ -81,6 +134,9 @@ export function GifMergerTool() {
                 已上传的GIF文件 ({gifObjects.length})
               </h2>
               <div className="flex items-center space-x-4">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  💡 拖拽文件可调整合并顺序
+                </span>
                 <button
                     onClick={() => setShowFrameDebug(!showFrameDebug)}
                     className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
@@ -132,14 +188,35 @@ export function GifMergerTool() {
 
             {/* 文件列表 */}
             <div className="space-y-6">
-              {gifObjects.map((gif) => (
+              {gifObjects.map((gif, index) => (
                   <div
                       key={gif.id}
-                      className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                      className={`p-4 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-move transition-all duration-200 ${
+                        draggedIndex === index ? 'opacity-50 shadow-lg' : 'hover:shadow-md'
+                      }`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={handleDragOver}
+                      onDragEnter={handleDragEnter}
+                      onDrop={(e) => handleDrop(e, index)}
+                      title="拖拽可调整文件顺序"
                   >
                     {/* 基本信息 */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
+                        {/* 序号显示 */}
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full flex items-center justify-center text-sm font-medium">
+                          {index + 1}
+                        </div>
+                        
+                        {/* 拖拽手柄 */}
+                        <div className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
+                          </svg>
+                        </div>
+                        
                         <div className="flex-shrink-0 w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded overflow-hidden">
                           <Image
                               src={gif.url}
@@ -199,7 +276,7 @@ export function GifMergerTool() {
       )}
 
       {/* 水印上传区域 */}
-      {gifObjects.length > 0 && (
+      {/* {gifObjects.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-600">
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             水印设置（可选）
@@ -212,7 +289,7 @@ export function GifMergerTool() {
             gifObjects={gifObjects.map(gif => ({ id: gif.id, file: gif.file, url: gif.url }))}
           />
         </div>
-      )}
+      )} */}
 
 
       {/* GIF导出区域 */}

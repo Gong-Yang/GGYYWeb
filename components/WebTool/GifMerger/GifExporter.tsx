@@ -92,6 +92,7 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
     });
   }, []);
 
+  // 合并GIF
   const exportGif = useCallback(async (mergeMode: 'grid' | 'sequence') => {
     if (gifObjects.length === 0) {
       alert('请先上传GIF文件');
@@ -434,41 +435,41 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
           if (selectedGif && currentFrameIndex < selectedGif.frameCount) {
             const frameData = selectedGif.frames[currentFrameIndex];
             
-            // 按照层级顺序绘制内容
-            // 首先按层级排序水印（从小到大），层级相同时按添加顺序
-            const sortedWatermarks = [...watermarks].sort((a, b) => {
-              if (a.layer !== b.layer) {
-                return a.layer - b.layer;
-              }
-              // 层级相同时，保持原有顺序（稳定排序）
-              return watermarks.indexOf(a) - watermarks.indexOf(b);
-            });
+            // // 按照层级顺序绘制内容
+            // // 首先按层级排序水印（从小到大），层级相同时按添加顺序
+            // const sortedWatermarks = [...watermarks].sort((a, b) => {
+            //   if (a.layer !== b.layer) {
+            //     return a.layer - b.layer;
+            //   }
+            //   // 层级相同时，保持原有顺序（稳定排序）
+            //   return watermarks.indexOf(a) - watermarks.indexOf(b);
+            // });
             
-            // 绘制底层水印（层级小于0的水印）
-            const bottomWatermarks = sortedWatermarks.filter(wm => wm.layer < 0);
-            for (const watermark of bottomWatermarks) {
-              const watermarkImage = watermarkImages[watermark.id];
-              if (watermarkImage) {
-                // 检查水印应用范围
-                const isOverall = watermark.target === 'overall';
+            // // 绘制底层水印（层级小于0的水印）
+            // const bottomWatermarks = sortedWatermarks.filter(wm => wm.layer < 0);
+            // for (const watermark of bottomWatermarks) {
+            //   const watermarkImage = watermarkImages[watermark.id];
+            //   if (watermarkImage) {
+            //     // 检查水印应用范围
+            //     const isOverall = watermark.target === 'overall';
                 
-                // 只有在整体模式下才绘制整体水印
-                if (isOverall) {
-                  drawWatermark(ctx, watermarkImage, watermark, totalWidth, totalHeight);
-                }
-              }
-            }
+            //     // 只有在整体模式下才绘制整体水印
+            //     if (isOverall) {
+            //       drawWatermark(ctx, watermarkImage, watermark, totalWidth, totalHeight);
+            //     }
+            //   }
+            // }
             
-            // 绘制选择模式的底层水印
-            for (const watermark of bottomWatermarks) {
-              const watermarkImage = watermarkImages[watermark.id];
-              if (!watermarkImage) continue;
+            // // 绘制选择模式的底层水印
+            // for (const watermark of bottomWatermarks) {
+            //   const watermarkImage = watermarkImages[watermark.id];
+            //   if (!watermarkImage) continue;
               
-              // 如果是选择模式且当前GIF在选择列表中，绘制水印
-              if (Array.isArray(watermark.target) && watermark.target.includes(selectedGif.id)) {
-                drawWatermark(ctx, watermarkImage, watermark, totalWidth, totalHeight);
-              }
-            }
+            //   // 如果是选择模式且当前GIF在选择列表中，绘制水印
+            //   if (Array.isArray(watermark.target) && watermark.target.includes(selectedGif.id)) {
+            //     drawWatermark(ctx, watermarkImage, watermark, totalWidth, totalHeight);
+            //   }
+            // }
             
             if (frameData) {
               // 居中绘制当前GIF的帧
@@ -487,57 +488,57 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
               }
             }
             
-            // 绘制与GIF同层级的水印（层级等于0的水印）
-            const middleWatermarks = sortedWatermarks.filter(wm => wm.layer === 0);
-            for (const watermark of middleWatermarks) {
-              const watermarkImage = watermarkImages[watermark.id];
-              if (watermarkImage) {
-                // 检查水印应用范围
-                const isOverall = watermark.target === 'overall';
+            // // 绘制与GIF同层级的水印（层级等于0的水印）
+            // const middleWatermarks = sortedWatermarks.filter(wm => wm.layer === 0);
+            // for (const watermark of middleWatermarks) {
+            //   const watermarkImage = watermarkImages[watermark.id];
+            //   if (watermarkImage) {
+            //     // 检查水印应用范围
+            //     const isOverall = watermark.target === 'overall';
                 
-                // 只有在整体模式下才绘制整体水印
-                if (isOverall) {
-                  drawWatermark(ctx, watermarkImage, watermark, totalWidth, totalHeight);
-                }
-              }
-            }
+            //     // 只有在整体模式下才绘制整体水印
+            //     if (isOverall) {
+            //       drawWatermark(ctx, watermarkImage, watermark, totalWidth, totalHeight);
+            //     }
+            //   }
+            // }
             
-            // 绘制选择模式的同层级水印
-            for (const watermark of middleWatermarks) {
-              const watermarkImage = watermarkImages[watermark.id];
-              if (!watermarkImage) continue;
+            // // 绘制选择模式的同层级水印
+            // for (const watermark of middleWatermarks) {
+            //   const watermarkImage = watermarkImages[watermark.id];
+            //   if (!watermarkImage) continue;
               
-              // 如果是选择模式且当前GIF在选择列表中，绘制水印
-              if (Array.isArray(watermark.target) && watermark.target.includes(selectedGif.id)) {
-                drawWatermark(ctx, watermarkImage, watermark, totalWidth, totalHeight);
-              }
-            }
+            //   // 如果是选择模式且当前GIF在选择列表中，绘制水印
+            //   if (Array.isArray(watermark.target) && watermark.target.includes(selectedGif.id)) {
+            //     drawWatermark(ctx, watermarkImage, watermark, totalWidth, totalHeight);
+            //   }
+            // }
             
-            // 绘制顶层水印（层级大于0的水印）
-            const topWatermarks = sortedWatermarks.filter(wm => wm.layer > 0);
-            for (const watermark of topWatermarks) {
-              const watermarkImage = watermarkImages[watermark.id];
-              if (watermarkImage) {
-                // 检查水印应用范围
-                const isOverall = watermark.target === 'overall';
+            // // 绘制顶层水印（层级大于0的水印）
+            // const topWatermarks = sortedWatermarks.filter(wm => wm.layer > 0);
+            // for (const watermark of topWatermarks) {
+            //   const watermarkImage = watermarkImages[watermark.id];
+            //   if (watermarkImage) {
+            //     // 检查水印应用范围
+            //     const isOverall = watermark.target === 'overall';
                 
-                // 只有在整体模式下才绘制整体水印
-                if (isOverall) {
-                  drawWatermark(ctx, watermarkImage, watermark, totalWidth, totalHeight);
-                }
-              }
-            }
+            //     // 只有在整体模式下才绘制整体水印
+            //     if (isOverall) {
+            //       drawWatermark(ctx, watermarkImage, watermark, totalWidth, totalHeight);
+            //     }
+            //   }
+            // }
             
-            // 绘制选择模式的顶层水印
-            for (const watermark of topWatermarks) {
-              const watermarkImage = watermarkImages[watermark.id];
-              if (!watermarkImage) continue;
+            // // 绘制选择模式的顶层水印
+            // for (const watermark of topWatermarks) {
+            //   const watermarkImage = watermarkImages[watermark.id];
+            //   if (!watermarkImage) continue;
               
-              // 如果是选择模式且当前GIF在选择列表中，绘制水印
-              if (Array.isArray(watermark.target) && watermark.target.includes(selectedGif.id)) {
-                drawWatermark(ctx, watermarkImage, watermark, totalWidth, totalHeight);
-              }
-            }
+            //   // 如果是选择模式且当前GIF在选择列表中，绘制水印
+            //   if (Array.isArray(watermark.target) && watermark.target.includes(selectedGif.id)) {
+            //     drawWatermark(ctx, watermarkImage, watermark, totalWidth, totalHeight);
+            //   }
+            // }
           }
         }
         
@@ -638,7 +639,7 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
       </div>
 
       {/* 水印状态显示 */}
-      {watermarks.length > 0 && (
+      {/* {watermarks.length > 0 && (
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
           <div className="flex items-center space-x-3">
             <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -654,7 +655,7 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* 导出按钮 */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
