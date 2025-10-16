@@ -172,7 +172,7 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
           ${isProcessing 
             ? 'border-gray-300 bg-gray-100 cursor-not-allowed'
             : isDragActive 
-              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+              ? 'border-gray-900 bg-gray-50 dark:border-white dark:bg-gray-800' 
               : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
           }
         `}
@@ -181,7 +181,7 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
         <div className="space-y-4">
           <div className="flex justify-center">
             {isProcessing ? (
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-black dark:border-white"></div>
             ) : (
               <svg
                 className="w-16 h-16 text-gray-400"

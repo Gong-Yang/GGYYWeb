@@ -4,13 +4,13 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-white min-h-[100vh] border-t border-gray-200 dark:bg-gray-900 dark:border-gray-800 flex flex-col">
+    <footer className="bg-white min-h-[100vh] border-t border-gray-200 dark:bg-black dark:border-gray-700 flex flex-col">
       <div className="max-w-[1300px] mx-auto px-4 sm:px-6 py-20 lg:py-32 flex flex-col justify-between flex-grow">
         <div className=" grid grid-cols-1 lg:grid-cols-12 gap-12 ">
           {/* 左侧：Logo + 社交图标 */}
           <div className="lg:col-span-4">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-3">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                 WebTool
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 max-w-xs">
@@ -71,22 +71,22 @@ export function Footer() {
                 </h3>
                 <ul className="space-y-3">
                   <li>
-                    <Link href="/gif-merger" className="text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors">
+                    <Link href="/gif-merger" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
                       GIF工具
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors">
+                    <Link href="#" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
                       视频工具
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors">
+                    <Link href="#" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
                       图像工具
                     </Link>
                   </li>
                   <li>
-                    <Link href="#" className="text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors">
+                    <Link href="#" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
                       PDF工具
                     </Link>
                   </li>
@@ -100,17 +100,17 @@ export function Footer() {
                 </h3>
                 <ul className="space-y-3">
                   <li>
-                    <Link href="/privacy" className="text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors">
-                      隐私政策
+                    <Link href="/privacy" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
+                      隐私放策
                     </Link>
                   </li>
                   <li>
-                    <Link href="/terms" className="text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors">
+                    <Link href="/terms" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
                       服务条款
                     </Link>
                   </li>
                   <li>
-                    <Link href="/security" className="text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors">
+                    <Link href="/security" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
                       安全说明
                     </Link>
                   </li>
@@ -124,17 +124,17 @@ export function Footer() {
                 </h3>
                 <ul className="space-y-3">
                   <li>
-                    <Link href="/contact" className="text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors">
+                    <Link href="/contact" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
                       联系方式
                     </Link>
                   </li>
                   <li>
-                    <Link href="/feedback" className="text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors">
+                    <Link href="/feedback" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
                       意见反馈
                     </Link>
                   </li>
                   <li>
-                    <Link href="/about" className="text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors">
+                    <Link href="/about" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
                       关于我们
                     </Link>
                   </li>

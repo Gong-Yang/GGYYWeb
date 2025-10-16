@@ -139,13 +139,13 @@ export function GifMergerTool() {
                 </span>
                 <button
                     onClick={() => setShowFrameDebug(!showFrameDebug)}
-                    className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                    className="text-sm text-gray-900 hover:text-gray-700 dark:text-white dark:hover:text-gray-300"
                 >
                   {showFrameDebug ? '隐藏' : '显示'}帧调试
                 </button>
                 <button
                     onClick={handleClearAll}
-                    className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                    className="text-sm text-gray-900 hover:text-gray-700 dark:text-white dark:hover:text-gray-300"
                 >
                   清空所有
                 </button>
@@ -206,7 +206,7 @@ export function GifMergerTool() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
                         {/* 序号显示 */}
-                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full flex items-center justify-center text-sm font-medium">
+                        <div className="flex-shrink-0 w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center text-sm font-medium">
                           {index + 1}
                         </div>
                         
@@ -320,11 +320,11 @@ export function GifMergerTool() {
       )}
 
       {/* 技术说明 */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
           技术实现说明
         </h3>
-        <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
+        <div className="text-sm text-gray-700 dark:text-gray-300 space-y-2">
           <p>• <strong>帧处理</strong>：正确实现累积渲染机制和Disposal方法处理</p>
           <p>• <strong>时序同步</strong>：以最长GIF的帧数为播放周期，短GIF播放完后定格在最后一帧</p>
           <p>• <strong>透明支持</strong>：完整支持透明背景GIF的合并</p>

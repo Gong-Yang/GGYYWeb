@@ -662,14 +662,14 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
         <button
           onClick={() => exportGif('grid')}
           disabled={disabled || isExporting || gifObjects.length === 0}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors flex-1 sm:flex-none"
+          className="px-6 py-3 bg-black hover:bg-gray-700 disabled:bg-gray-400 text-white dark:bg-white dark:text-black dark:hover:bg-gray-200 font-medium rounded-lg transition-colors flex-1 sm:flex-none"
         >
           {isExporting ? `合并中... ${progress}%` : watermarks.length > 0 ? '平面合并GIF（含水印）' : '平面合并GIF'}
         </button>
         <button
           onClick={() => exportGif('sequence')}
           disabled={disabled || isExporting || gifObjects.length === 0}
-          className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors flex-1 sm:flex-none"
+          className="px-6 py-3 bg-black hover:bg-gray-700 disabled:bg-gray-400 text-white dark:bg-white dark:text-black dark:hover:bg-gray-200 font-medium rounded-lg transition-colors flex-1 sm:flex-none"
         >
           {isExporting ? `合并中... ${progress}%` : watermarks.length > 0 ? '连续播放合并GIF（含水印）' : '连续播放合并GIF'}
         </button>
@@ -678,11 +678,11 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
       {/* 按钮说明 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
         <div className="text-center">
-          <div className="font-medium text-blue-600 dark:text-blue-400 mb-1">平面合并</div>
+          <div className="font-medium text-gray-900 dark:text-white mb-1">平面合并</div>
           <div>所有GIF同时显示在网格布局中</div>
         </div>
         <div className="text-center">
-          <div className="font-medium text-green-600 dark:text-green-400 mb-1">连续播放</div>
+          <div className="font-medium text-gray-900 dark:text-white mb-1">连续播放</div>
           <div>按顺序连续播放每个GIF</div>
         </div>
       </div>
@@ -696,7 +696,7 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-black dark:bg-white h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
@@ -722,7 +722,7 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
             </div>
             <button
               onClick={downloadGif}
-              className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-700 dark:bg-white dark:text-black dark:hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
               下载合并后的GIF
             </button>

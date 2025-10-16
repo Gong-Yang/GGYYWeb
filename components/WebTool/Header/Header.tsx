@@ -88,7 +88,7 @@ export function Header() {
 
       <header 
         ref={headerRef}
-        className="sticky top-0 z-50 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-800"
+        className="sticky top-0 z-50 bg-white border-b border-gray-200 dark:bg-black dark:border-gray-700"
       >
         <nav className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -97,7 +97,7 @@ export function Header() {
               {/* Logo */}
               <div className="flex-shrink-0">
                 <Link href="/" className="flex items-center space-x-2">
-                  <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
                     WebTool
                   </span>
                 </Link>
@@ -139,7 +139,7 @@ export function Header() {
 
                     {/* 下拉菜单 - 参考 Figma 风格：全宽、无圆角 */}
                     {activeCategory === category.id && (
-                      <div className="fixed left-0 right-0 top-[64px] bg-white dark:bg-gray-900 shadow-lg border-t border-gray-200 dark:border-gray-800 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                      <div className="fixed left-0 right-0 top-[64px] bg-white dark:bg-black shadow-lg border-t border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {category.tools.map((tool) => (
@@ -170,7 +170,7 @@ export function Header() {
                                     </div>
                                   </div>
                                   {tool.comingSoon && (
-                                    <span className="ml-3 px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30 rounded">
+                                    <span className="ml-3 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700 rounded">
                                       即将推出
                                     </span>
                                   )}
@@ -190,7 +190,7 @@ export function Header() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/about"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors"
+                className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
               >
                 关于我们
               </Link>
@@ -198,13 +198,13 @@ export function Header() {
           </div>
 
         {/* 移动端菜单 */}
-        <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-800 mt-2">
+        <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700 mt-2">
           <div className="space-y-2">
             {TOOL_CATEGORIES.map((category) => (
               <div key={category.id}>
                 <button
                   onClick={() => setActiveCategory(activeCategory === category.id ? null : category.id)}
-                  className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800 rounded-md"
+                  className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 rounded-md"
                 >
                   {category.name}
                   <svg
@@ -233,7 +233,7 @@ export function Header() {
                       >
                         {tool.name}
                         {tool.comingSoon && (
-                          <span className="ml-2 text-xs text-yellow-600 dark:text-yellow-500">
+                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
                             即将推出
                           </span>
                         )}

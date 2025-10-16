@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { GifMergerTool } from '@/components/GifMerger/GifMergerTool';
+import { GifMergerTool } from '@/components/WebTool/GifMerger/GifMergerTool';
 
 export const metadata: Metadata = {
   title: 'GIF处理工具 - 在线多GIF动画合并编辑器 | WebTool',
@@ -36,7 +36,7 @@ export default function GifMergerPage() {
             精确解析和支持合并多个GIF动画文件，支持PNG水印添加。支持透明背景、网格布局和时序同步，
             保持原始动画效果。
           </p>
-          <div className="flex flex-wrap justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex flex-wrap justify-center gap-2 text-sm text-gray-500 dark:text-[#828282]">
             <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">精确帧解析</span>
             <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">透明背景支持</span>
             <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">时序同步</span>

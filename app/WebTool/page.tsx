@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import Link from "next/link"
 
-import { Button } from "components/Button/Button"
+import { Button } from "@/components/general/Button/Button"
 
 export const metadata: Metadata = {
   title: "WebTool - 实用工具集合",
@@ -22,7 +22,7 @@ const TOOLS = [
     id: "gif-merger",
     name: "GIF 工具",
     description: "GIF加水印、将多个 GIF 文件平面合并 或者 连续播放，支持自定义帧率和尺寸调整",
-    href: "/gif-merger",
+    href: "/WebTool/gif-merger",
     icon: (
       <svg
         className="h-8 w-8"
@@ -162,13 +162,13 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="bg-white min-h-[calc(100vh-160px)] flex items-center justify-center dark:bg-gray-900 ">
+      <section className="bg-white min-h-[calc(100vh-160px)] flex items-center justify-center dark:bg-black ">
         <div className="max-w-[1300px] mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32 text-center">
           <div className="mx-auto max-w-4xl">
             <h1 className="mb-4 text-4xl leading-none font-extrabold tracking-tight md:text-5xl xl:text-6xl dark:text-white">
               WebTool
             </h1>
-            <p className="mb-2 text-xl font-semibold text-blue-600 dark:text-blue-400">
+            <p className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
               实用工具集合
             </p>
             <p className="mb-6 max-w-2xl mx-auto font-light text-gray-500 md:text-lg lg:mb-8 lg:text-xl dark:text-gray-400">
@@ -189,7 +189,7 @@ export default function Home() {
       </section>
 
       {/* Tools Section */}
-      <section id="tools" className="bg-gray-50 min-h-screen dark:bg-gray-800">
+      <section id="tools" className="bg-gray-50 min-h-screen dark:bg-gray-900">
         <div className="max-w-[1300px] mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
           <div className="mb-8 text-center lg:mb-12">
             <h2 className="mb-4 text-3xl font-extrabold tracking-tight text-gray-900 md:text-4xl dark:text-white">
@@ -206,13 +206,13 @@ export default function Home() {
                 {tool.status === "available" ? (
                   <Link
                     href={tool.href}
-                    className="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-lg hover:scale-105 dark:border-gray-700 dark:bg-gray-900"
+                    className="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-lg hover:scale-105 dark:border-gray-700 dark:bg-gray-800"
                   >
                     <div className="mb-4 flex items-center justify-between">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-black text-white dark:bg-white dark:text-black">
                         {tool.icon}
                       </div>
-                      <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
+                      <span className="inline-flex items-center rounded-full bg-black px-2.5 py-0.5 text-xs font-medium text-white dark:bg-white dark:text-black">
                         可用
                       </span>
                     </div>
@@ -224,12 +224,12 @@ export default function Home() {
                     </p>
                   </Link>
                 ) : (
-                  <div className="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm opacity-60 dark:border-gray-700 dark:bg-gray-900">
+                  <div className="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm opacity-60 dark:border-gray-700 dark:bg-gray-800">
                     <div className="mb-4 flex items-center justify-between">
                       <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600">
                         {tool.icon}
                       </div>
-                      <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
+                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
                         即将推出
                       </span>
                     </div>
@@ -248,7 +248,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="bg-white dark:bg-gray-900">
+      <section className="bg-white dark:bg-black">
         <div className="max-w-[1300px] mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
           <div className="mb-8 text-center lg:mb-12">
             <h2 className="mb-4 text-3xl font-extrabold tracking-tight text-gray-900 md:text-4xl dark:text-white">
@@ -258,7 +258,7 @@ export default function Home() {
 
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <div className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-black text-white dark:bg-white dark:text-black">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
@@ -272,7 +272,7 @@ export default function Home() {
             </div>
 
             <div className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-black text-white dark:bg-white dark:text-black">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
@@ -286,7 +286,7 @@ export default function Home() {
             </div>
 
             <div className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-400">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-black text-white dark:bg-white dark:text-black">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
