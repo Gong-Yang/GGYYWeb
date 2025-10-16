@@ -11,10 +11,10 @@ export function Footer() {
           <div className="lg:col-span-4">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                WebTool
+                GGYY NET
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 max-w-xs">
-                专业的在线工具集合平台，为您提供便捷、高效的工具服务。
+                我们用代码解决日常小问题。
               </p>
             </div>
             

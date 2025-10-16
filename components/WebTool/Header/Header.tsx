@@ -91,12 +91,12 @@ export function Header() {
         className="sticky top-0 z-50 bg-white border-b border-gray-200 dark:bg-black dark:border-gray-700"
       >
         <nav className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-16 font-black">
             {/* 左侧：Logo + 工具分类导航 */}
             <div className="flex items-center space-x-8">
               {/* Logo */}
               <div className="flex-shrink-0">
-                <Link href="/" className="flex items-center space-x-2">
+                <Link href="/WebTool" className="flex items-center space-x-2">
                   <span className="text-2xl font-bold text-gray-900 dark:text-white">
                     WebTool
                   </span>
@@ -112,7 +112,7 @@ export function Header() {
                   >
                     <button
                       onClick={() => setActiveCategory(activeCategory === category.id ? null : category.id)}
-                      className="group relative px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-1"
+                      className="group relative px-4 py-2 text-sm  text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-1"
                     >
                       {category.name}
                       {/* 下拉箭头图标 */}
@@ -189,11 +189,12 @@ export function Header() {
             {/* 右侧导航 */}
             <div className="flex items-center space-x-4">
               <Link
-                href="/about"
-                className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
+                href="/"
+                className="text-sm  text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
               >
                 关于我们
               </Link>
+
             </div>
           </div>
 
