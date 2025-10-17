@@ -2,10 +2,11 @@
 
 import { useState } from "react"
 import { Input } from "@/components/general/Input/Input"
-import { SubmitButton } from "@/components/general/SubmitButton/SubmitButton"
+import { Button } from "@/components/general/Button/Button"
 
 export default function RegisterPage() {
   const [nickname, setNickname] = useState("")
+  const [emil, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,6 +30,7 @@ export default function RegisterPage() {
           注册
         </h1>
         
+        {/* 第一步，收集昵称 */}
         <form onSubmit={handleSubmit} className="space-y-24">
           <Input
             label="Nickname"
@@ -40,16 +42,46 @@ export default function RegisterPage() {
           />
           
           <div className=" flex justify-center">
-            <SubmitButton
+            <Button
               type="submit"
-              intent="primary"
               size="lg"
               disabled={isLoading || !nickname.trim()}
             >
               {isLoading ? "处理中..." : "下一步"}
-            </SubmitButton>
+            </Button>
+
           </div>
         </form>
+
+        {/* 第二步，验证邮箱 */}
+        {/* <form onSubmit={handleSubmit} className="space-y-24">
+          <Input
+            label="Email"
+            type="text"
+            placeholder="email@janesfakedomain.net"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            required
+          />
+          
+          <div className=" flex justify-center">
+            <Button
+              type="submit"
+              size="lg"
+              disabled={isLoading || !nickname.trim()}
+            >
+              {isLoading ? "处理中..." : "验证邮箱"}
+            </Button>
+            <Button
+              type="submit"
+              size="lg"
+            >
+              上一步
+            </Button>
+          </div>
+        </form> */}
+
+
       </div>
     </div>
   )

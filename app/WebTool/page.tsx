@@ -177,12 +177,16 @@ export default function WebtoolHome() {
               高性能、响应式设计，随时随地满足您的工具需求。
             </p>
             <div className="flex flex-col space-y-4 sm:flex-row sm:justify-center sm:space-y-0 sm:space-x-4">
-              <Button href="#tools" className="scroll-smooth">
-                浏览工具
-              </Button>
-              <Button href="/gif-merger" intent="secondary">
-                体验 GIF 合并工具
-              </Button>
+              <Link href="#tools" className="scroll-smooth">
+                <Button>
+                  浏览工具
+                </Button>
+              </Link>
+              <Link href="/gif-merger">
+                <Button intent="darkBorder">
+                  体验 GIF 合并工具
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
