@@ -5,11 +5,23 @@ import router from 'next/router';
 
 import { useState, useEffect, useRef } from 'react';
 
+interface Tool {
+  name: string;
+  href: string;
+  description: string;
+  comingSoon: boolean;
+}
 
+interface NavCategory {
+  id: string;
+  name: string;
+  href: string;
+  tools: Tool[]; 
+}
 
 
 // 工具分类配置
-const TOOL_CATEGORIES = [
+const TOOL_CATEGORIES : NavCategory[] = [
   {
     id: 'Home',
     name: 'Home',
@@ -41,6 +53,7 @@ const TOOL_CATEGORIES = [
 
 export function Header() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [selectedNav, setSelectedNav] = useState<string>('Home'); // 默认选中Home
   const headerRef = useRef<HTMLElement>(null);
 
   // 点击外部关闭下拉菜单
@@ -61,16 +74,21 @@ export function Header() {
   }, [activeCategory]);
 
   // 点击导航栏
-  const handleClick = (category:any )=>{
-    // 如果没下拉框，则跳转
-    if(category.tools.length<=0){
-      router.push(category.href)
+  const handleClick = (category:NavCategory)=>{
+    const { id, href, tools } = category;
+    // 设置选中状态
+    setSelectedNav(id);
+    
+    if(tools.length<=0){
+      // 无下拉：关闭下拉菜单，并导航
+      setActiveCategory(null)
+      setTimeout(() => router.push(href), 0);
+      // router.push(href)
+      
     }else{
-      //有下拉框，则打开下拉框
-      setActiveCategory(activeCategory === category.id ? null : category.id)
+      // 有下拉：切换当前下拉状态
+      setActiveCategory(activeCategory === id ? null : id)
     }
-
-   
   }
 
   return (
@@ -92,7 +110,7 @@ export function Header() {
             {/* Logo */}
             <div className="flex items-center space-x-8">
                 <Link href="/" className="flex items-center space-x-2">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <span className="text-2xl font-bold text-black dark:text-white">
                     GGYY NET
                   </span>
                 </Link>
@@ -107,16 +125,40 @@ export function Header() {
                 >
                   <button
                     onClick={()=>handleClick(category)}
-                    className="group relative px-4 py-2 text-sm  text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-1"
+                    className="relative px-4 py-2 text-sm flex items-center gap-1 transition-colors duration-300"
+                    style={{
+                      position: 'relative',
+                      zIndex: 1,
+                    }}
                   >
-                    {category.name}
+                    {/* 选中状态的黑色背景按钮 */}
+                    <span 
+                      className="absolute inset-0 bg-black dark:bg-white rounded transition-all duration-300"
+                      style={{
+                        transform: selectedNav === category.id ? 'scale(1)' : 'scale(0.8)',
+                        opacity: selectedNav === category.id ? 1 : 0,
+                        animation: selectedNav === category.id ? 'bounceIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)' : 'none',
+                      }}
+                    />
+                    
+                    <span className={`relative z-10 transition-colors duration-300 ${
+                      selectedNav === category.id 
+                        ? 'text-white dark:text-black' 
+                        : 'text-black dark:text-white'
+                    }`}>
+                      {category.name}
+                    </span>
 
                     {/* 下拉箭头图标 */}
                     {
                       category.tools.length > 0 &&(
                         <svg
-                            className={`w-4 h-4 transition-transform duration-200 ${
+                            className={`relative z-10 w-4 h-4 transition-all duration-200 ${
                               activeCategory === category.id ? 'rotate-180' : ''
+                            } ${
+                              selectedNav === category.id 
+                                ? 'text-white dark:text-black' 
+                                : 'text-black dark:text-white'
                             }`}
                             fill="none"
                             stroke="currentColor"
@@ -126,16 +168,6 @@ export function Header() {
                         </svg>  
                       )
                     }
-                    
-                    
-                    {/* 悬停和选中时的下划线效果 - 参考Figma样式：从下往上移动+渐显 */}
-                    <span 
-                      className={`absolute left-4 right-4 h-px bg-gray-900 dark:bg-white transform origin-left transition-all duration-300 ease-out ${
-                        activeCategory === category.id 
-                          ? 'bottom-0 opacity-100 ' 
-                          : 'bottom-[-4px] opacity-0  group-hover:bottom-0 group-hover:opacity-100 '
-                      }`}
-                    />
                   </button>
 
                   {/* 下拉菜单 - 参考 Figma 风格：全宽、无圆角 */}
@@ -185,16 +217,7 @@ export function Header() {
                 </div>
               ))}
             </div>
-            {/* 右侧导航 */}
-            {/* <div className="flex items-center space-x-4">
-              <Link
-                href="/about"
-                className="text-sm  text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
-              >
-                关于我们
-              </Link>
 
-            </div> */}
           </div>
 
         {/* 移动端菜单 */}

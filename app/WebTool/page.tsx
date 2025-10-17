@@ -158,7 +158,7 @@ const TOOLS = [
   },
 ]
 
-export default function Home() {
+export default function WebtoolHome() {
   return (
     <>
       {/* Hero Section */}

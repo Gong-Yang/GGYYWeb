@@ -1,15 +1,27 @@
-import { Metadata } from "next"
-import Link from "next/link"
+'use client'
 
-import { Button } from "@/components/general/Button/Button"
-
+import { useRouter } from 'next/navigation'
 
 
 export default function HomePage() {
+  const router = useRouter()
+  
+  const register = () => { 
+    router.push("/Auth/register")
+  }
+
+  const login = () => { 
+    router.push("/Auth/login")
+  }
   return (
     <>
       home主页
-
+      <div onClick={login}>
+        登录
+      </div>
+      <div onClick={register}>
+        注册
+      </div>
     </>
   )
 }
