@@ -1,12 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Input } from "@/components/general/Input/Input"
 import { Button } from "@/components/general/Button/Button"
 import { Modal } from "@/components/general/Modal/Modal"
 
+
+
+
 export default function RegisterPage() {
-  const [step, setStep] = useState<number>(1) // 当前步骤
+  const router = useRouter()
   const [nickname, setNickname] = useState<string>("")
   const [email, setEmail] = useState<string>("")
   //错误信息
@@ -14,7 +18,7 @@ export default function RegisterPage() {
   const [errorNickname, setErrorNickname] = useState<string>("")  
 
   const [submitButton,setSubmitButton] = useState<string>("发起验证")  // 提交按钮的文字  发起验证  处理中...  已发送邮件
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isSending, setIsSending] = useState<boolean>(false)  // 是否正在发送验证码 [true | false] 还没超过60s
   const [showEmailSentModal, setShowEmailSentModal] = useState<boolean>(false) // 邮件发送成功弹窗
 
 
@@ -36,23 +40,8 @@ export default function RegisterPage() {
     return emailRegex.test(email)
   }
 
-  const handleNextStep = (e: React.FormEvent) => {
-    e.preventDefault() // 阻止 组织表单默认行为——刷新页面
 
-    if (!chackEmail(email)) {
-      setErrorEmail("请输入正确的邮箱")
-      return
-    }
 
-    //验证邮件是否存在
-   
-    setStep(2)
-  }
-
-  const handlePrevStep = () => {
-    setStep(1)
-    setSubmitButton("发起验证")
-  }
 
   // 创建60秒的倒计时
   const contdown = (duration: number) => {
@@ -61,25 +50,33 @@ export default function RegisterPage() {
       if (timer <= 0) {
         clearInterval(interval);
         setSubmitButton("发起验证")
+        setIsSending(false)
       } else {
-        setSubmitButton(`${timer}s`)
+        setSubmitButton(`请${timer}s后重试`)
         timer--;
       }
     }, 1000);
   }
 
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault() // 阻止 组织表单默认行为——刷新页面
+    if(isSending) return  // 正在发送验证码 防多次点击
+    
 
-    //检查昵称输入是否为空
+    if (!chackEmail(email)) {
+      setErrorEmail("邮箱格式错误")
+      return
+    }
+
     if (!nickname.trim()) {
       setErrorNickname("请输入昵称")
       return
     }
     
+    setIsSending(true)
     setSubmitButton("处理中...")
-    setIsLoading(true)
     
     try {
       // TODO: 实现注册逻辑
@@ -88,107 +85,91 @@ export default function RegisterPage() {
       
       // 显示邮件发送成功弹窗
       setShowEmailSentModal(true)
-      
+      setIsSending(false)
       contdown(60)
     } catch (error) {
       console.error("Registration failed:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // 计算表单的动画类名
-  const getFormClassName = (formStep: number) => {
-    const baseClass = 'space-y-18 transition-all duration-500 ease-in-out'
-    
-    if (step === formStep) {
-      // 当前激活的表单：在中心位置，完全可见
-      return `${baseClass} translate-x-0 opacity-100`
-    }
-    
-    // 非激活表单的位置取决于它相对于当前步骤的位置
-    if (formStep < step) {
-      // 在当前步骤之前的表单：应该在左侧（已经滑出屏幕左边）
-      return `${baseClass} -translate-x-full opacity-0 absolute top-0 w-full pointer-events-none`
-    } else {
-      // 在当前步骤之后的表单：应该在右侧（等待从右边滑入）
-      return `${baseClass} translate-x-full opacity-0 absolute top-0 w-full pointer-events-none`
+      setSubmitButton("发起验证")
+      setIsSending(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black px-4">
-      <div className="w-full max-w-md">
-        <h1 className="text-4xl font-bold text-center text-black dark:text-white mb-12">
-          注册
-        </h1>
+    <div className="min-h-screen bg-white dark:bg-black">
+      {/* 返回登录页面按钮  */}
+      <div className="absolute top-6 left-6">
+        <button
+          onClick={() => router.push('/Auth/login')}
+          className="flex items-center gap-2 text-white dark:text-black hover:opacity-80 transition-opacity"
+        >
+          <div className="w-8 h-8 rounded-full bg-black dark:bg-white flex items-center justify-center">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 12L6 8L10 4"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+          <span className="ml-2 text-sm text-black dark:text-white">登录</span>
+        </button>
+      </div>
+
+      {/* 注册表单  */}
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          <h1 className="text-4xl font-bold text-center text-black dark:text-white mb-16">
+            注册
+          </h1>
         
-        
-        <div className="relative min-h-[400px]">
-          {/* 第一步，验证邮箱 */}
-          <form 
-            noValidate //禁用原生校验
-            onSubmit={handleNextStep} 
-            className={getFormClassName(1)}
+        <form 
+          noValidate
+          onSubmit={handleSubmit}
+          className="space-y-8"
+        >
+          <Input
+            label="Email address"
+            type="email"
+            placeholder="email@janesfakedomain.net"
+            value={email}
+            error={errorEmail}
+            onChange={(e) => onInputEmail(e.target.value)}
+          />
+          <Input
+            label="Nickname"
+            type="text"
+            placeholder="nickname"
+            error={errorNickname}
+            value={nickname}
+            onChange={(e) => onInputNikename(e.target.value)}
+          />
+          <div className="pt-2">
+            <Button
+              type="submit"
+              size="md"
+              fullWidth
+              // fontWeight="bold"
+            >
+              {submitButton}
+            </Button>
+          </div>
+        </form>
+
+        <button
+            type="button"
+            onClick={() => router.push('/Auth/register/active')}
+            className="text-black dark:text-white hover:opacity-70 transition-opacity text-sm"
           >
-            <Input
-              label="Email"
-              type="email"
-              placeholder="email@janesfakedomain.net"
-              value={email}
-              error={errorEmail}
-              onChange={(e) => onInputEmail(e.target.value)}
-              // required
-            />
-            
-            <div className="flex justify-center">
-              <Button
-                type="submit"
-                size="lg"
-              >
-                下一步
-              </Button>
-            </div>
-          </form>
-
-          {/* 第二步，收集昵称 */}
-          <form 
-            noValidate //禁用原生校验
-            onSubmit={handleSubmit} 
-            className={getFormClassName(2)}
-          >
-            <Input
-              label="Nickname"
-              type="text"
-              placeholder="nickname"
-              error={errorNickname}
-              value={nickname}
-              onChange={(e) => onInputNikename(e.target.value)}
-              // required  必填，勾选后会触发原生组件的校验和提示
-            />
-
-            <div className="flex justify-center gap-4">
-              <Button
-                type="button"
-                size="lg"
-                onClick={handlePrevStep}
-              >
-                上一步
-              </Button>
-              <Button
-                type="submit"
-                size="lg"
-                // disabled={isLoading || !email.trim()}
-              >
-                {submitButton}
-              </Button>
-            </div>
-            
-            
-          </form>
-
-          
-        </div>
+            注册激活
+          </button>
 
         {/* 邮件发送成功弹窗 */}
         <Modal
@@ -200,6 +181,7 @@ export default function RegisterPage() {
         >
           还没收到？60 秒后可重发。
         </Modal>
+        </div>
       </div>
     </div>
   )

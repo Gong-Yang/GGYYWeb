@@ -98,4 +98,74 @@ describe("Button", () => {
     const button = container.querySelector("button")
     expect(button).toBeDisabled()
   })
+
+  it("applies font weight - normal (default)", () => {
+    const { container } = render(
+      <Button>
+        Normal Weight
+      </Button>
+    )
+    const button = container.querySelector("button")
+    expect(button).toHaveClass("font-normal")
+  })
+
+  it("applies font weight - light", () => {
+    const { container } = render(
+      <Button fontWeight="light">
+        Light Weight
+      </Button>
+    )
+    const button = container.querySelector("button")
+    expect(button).toHaveClass("font-light")
+  })
+
+  it("applies font weight - medium", () => {
+    const { container } = render(
+      <Button fontWeight="medium">
+        Medium Weight
+      </Button>
+    )
+    const button = container.querySelector("button")
+    expect(button).toHaveClass("font-medium")
+  })
+
+  it("applies font weight - semibold", () => {
+    const { container } = render(
+      <Button fontWeight="semibold">
+        Semibold Weight
+      </Button>
+    )
+    const button = container.querySelector("button")
+    expect(button).toHaveClass("font-semibold")
+  })
+
+  it("applies font weight - bold", () => {
+    const { container } = render(
+      <Button fontWeight="bold">
+        Bold Weight
+      </Button>
+    )
+    const button = container.querySelector("button")
+    expect(button).toHaveClass("font-bold")
+  })
+
+  it("applies font weight - extrabold", () => {
+    const { container } = render(
+      <Button fontWeight="extrabold">
+        Extrabold Weight
+      </Button>
+    )
+    const button = container.querySelector("button")
+    expect(button).toHaveClass("font-extrabold")
+  })
+
+  it("applies font weight - black", () => {
+    const { container } = render(
+      <Button fontWeight="black">
+        Black Weight
+      </Button>
+    )
+    const button = container.querySelector("button")
+    expect(button).toHaveClass("font-black")
+  })
 })
