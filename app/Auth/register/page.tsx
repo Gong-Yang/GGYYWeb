@@ -35,12 +35,24 @@ export default function RegisterPage() {
     }
   }
 
-  const chackEmail = (email: string) => { 
+  const chackEmailFormat = (email: string) => { 
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     return emailRegex.test(email)
   }
-
-
+  const chackEmail = () => { 
+    if (!chackEmailFormat(email)) {
+      setErrorEmail("邮箱格式错误")
+      return false
+    }
+    return true
+  }
+  const chackNickname = () => { 
+    if (!nickname.trim()) {
+      setErrorNickname("请输入昵称")
+      return false
+    }
+    return true
+  }
 
 
   // 创建60秒的倒计时
@@ -63,17 +75,15 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault() // 阻止 组织表单默认行为——刷新页面
     if(isSending) return  // 正在发送验证码 防多次点击
+   
+
+    // 验证所有字段
+    const isEmailValid = chackEmail();
+    const isNicknameValid = chackNickname();
+
+    if (!isEmailValid || !isNicknameValid) return
+      
     
-
-    if (!chackEmail(email)) {
-      setErrorEmail("邮箱格式错误")
-      return
-    }
-
-    if (!nickname.trim()) {
-      setErrorNickname("请输入昵称")
-      return
-    }
     
     setIsSending(true)
     setSubmitButton("处理中...")
@@ -85,7 +95,6 @@ export default function RegisterPage() {
       
       // 显示邮件发送成功弹窗
       setShowEmailSentModal(true)
-      setIsSending(false)
       contdown(60)
     } catch (error) {
       console.error("Registration failed:", error)
@@ -141,6 +150,7 @@ export default function RegisterPage() {
             placeholder="email@janesfakedomain.net"
             value={email}
             error={errorEmail}
+            onBlur={chackEmail}
             onChange={(e) => onInputEmail(e.target.value)}
           />
           <Input
@@ -149,6 +159,7 @@ export default function RegisterPage() {
             placeholder="nickname"
             error={errorNickname}
             value={nickname}
+            onBlur={chackNickname}
             onChange={(e) => onInputNikename(e.target.value)}
           />
           <div className="pt-2">

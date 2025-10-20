@@ -4,6 +4,7 @@ import { twMerge } from "tailwind-merge"
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
+  onBlur?: React.FocusEventHandler<HTMLInputElement> //失焦时调用
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(

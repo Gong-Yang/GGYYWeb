@@ -19,7 +19,9 @@ export default function RegisterActivePage() {
     email: "a",
   })
   const [passWord, setPassWord] = useState<string>("")
-  const [errorPassWord, setErrorPassWord] = useState<string>("")    //错误信息
+  const [confirmPassword, setConfirmPassword] = useState<string>("")  // 确认密码
+  const [errorPassWord, setErrorPassWord] = useState<string>("")    //密码错误信息
+  const [errorConfirmPassword, setErrorConfirmPassword] = useState<string>("")  // 确认密码错误信息
 
   const [isSending, setIsSending] = useState<boolean>(false)  // 是否正在发送验证码 [true | false] 还没超过60s
   const [showEmailSentModal, setShowEmailSentModal] = useState<boolean>(false) // 邮件发送成功弹窗
@@ -41,8 +43,29 @@ export default function RegisterActivePage() {
     }
   }
 
+  const onInputConfirmPassword = (value:string)=>{
+    setConfirmPassword(value)
+    if(value.trim()){
+      setErrorConfirmPassword("")
+    }
+  }
+
+  // 检查确认密码是否一致
+  const checkConfirmPassword = () => {
+    let info = "";
+    
+    if (!confirmPassword.trim()) {
+      info = "请输入确认密码";
+    } else if (passWord !== confirmPassword) {
+      info = "两次密码输入不一致";
+    }
+    
+    setErrorConfirmPassword(info);
+    return info === "" ? true : false;
+  }
+
   //检查密码格式
-  const chackPassWord = (password: string) => { 
+  const chackPassWordFormat = (password: string) => { 
     // 将密码循环测试
     const results = rules.map(rule => ({
       passed: rule.test(password),
@@ -69,34 +92,50 @@ export default function RegisterActivePage() {
     return '请' + failedMessages.join('、');
   };
 
-  // 提交前的检查
-  const validateForm = (): string | null => {
-    if (!userInfo.email || !userInfo.nickname) return "用户信息没有啦";
-    if (!passWord.trim()) return "请输入密码";
+  const chackPassWord = () => { 
+    let info = "";
     
-    //密码格式错误检查
-    const { allPassed, results } = chackPassWord(passWord);
-    if (!allPassed) return getErrorMessage(results);
-    
-    return null; // 无错误
+    if (!passWord.trim()) {
+      info = "请输入密码"
+    }else{
+      //密码格式错误检查
+      const { allPassed, results } = chackPassWordFormat(passWord);
+      if (!allPassed) {
+        info = getErrorMessage(results);
+      }
+    }
+    setErrorPassWord(info);
+    return info === "" ? true : false;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault() // 阻止 组织表单默认行为——刷新页面
-    if(isSending) return  // 正在注册 防多次点击
-    setIsSending(true)
 
-    const error = validateForm();
-    if (error) {
-      setErrorPassWord(error);
-      setIsSending(false)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault() // 阻止表单默认行为——刷新页面
+    if(isSending) return  // 正在注册 防多次点击
+    
+    // 验证所有字段
+    const isPasswordValid = chackPassWord();
+    const isConfirmPasswordValid = checkConfirmPassword();
+    
+    // 如果任何验证失败，停止提交
+    if (!isPasswordValid || !isConfirmPasswordValid) return;
+      
+    
+    // 再次确认密码一致性
+    if (passWord !== confirmPassword) {
+      setErrorConfirmPassword("两次密码输入不一致");
       return;
     }
     
+    if (!userInfo.email || !userInfo.nickname) {
+      return;
+    }
+
+    setIsSending(true);
     
     try {
       // TODO: 实现注册逻辑
-      
+      console.log('提交注册:', { email: userInfo.email, nickname: userInfo.nickname, password: passWord });
       
       setIsSending(false)
     } catch (error) {
@@ -137,32 +176,42 @@ export default function RegisterActivePage() {
       {/* 注册表单  */}
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-md">
-          <h1 className="text-4xl font-bold text-center text-black dark:text-white mb-16">
+          <h1 className="text-4xl font-bold text-center text-black dark:text-white mb-12">
             注册
           </h1>
         
         <form 
           noValidate
           onSubmit={handleSubmit}
-          className="space-y-8"
+          className="space-y-6"
         >
           <Input
-            label="Password"
-            type="text"
-            placeholder="password"
+            label="密码"
+            type="password"
+            placeholder="请输入密码"
             error={errorPassWord}
             value={passWord}
+            onBlur={chackPassWord}
             onChange={(e) => onInputPassWord(e.target.value)}
           />
+          <Input
+            label="确认密码"
+            type="password"
+            placeholder="请再次输入密码"
+            error={errorConfirmPassword}
+            value={confirmPassword}
+            onBlur={checkConfirmPassword}
+            onChange={(e) => onInputConfirmPassword(e.target.value)}
+          />
           
-          <div className="pt-2">
+          <div className="pt-4">
             <Button
               type="submit"
               size="md"
               fullWidth
-              // fontWeight="bold"
+              disabled={isSending}
             >
-              注册
+              {isSending ? '注册中...' : '注册'}
             </Button>
           </div>
         </form>

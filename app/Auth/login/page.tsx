@@ -31,25 +31,36 @@ export default function LoginPage() {
     }
   }
 
-  const chackEmail = (email: string) => { 
+  const chackEmailFormat = (email: string) => { 
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     return emailRegex.test(email)
   }
 
+  const chackEmail = () => { 
+    if (!chackEmailFormat(email)) {
+      setErrorEmail("邮箱格式错误")
+      return false
+    }
+    return true
+  }
+  const chackPassWord = () => { 
+    if (!passWord.trim()) {
+      setErrorPassWord("请输入密码")
+      return false
+    }
+    return true
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault() // 阻止 组织表单默认行为——刷新页面
     if(isLoging) return  // 正在登录 防多次点击
     
-    if (!chackEmail(email)) {
-      setErrorEmail("邮箱格式错误")
-      return
-    }
+    // 验证所有字段
+    const isEmailValid = chackEmail();
+    const isPassWordValid = chackPassWord();
 
-    if (!passWord.trim()) {
-      setErrorPassWord("请输入密码")
-      return
-    }
+    if (!isEmailValid || !isPassWordValid) return
+    
     
     setIsLoading(true)
     try {
@@ -112,6 +123,7 @@ export default function LoginPage() {
             placeholder="email@janesfakedomain.net"
             value={email}
             error={errorEmail}
+            onBlur={chackEmail}
             onChange={(e) => onInputEmail(e.target.value)}
           />
           <Input
@@ -120,6 +132,7 @@ export default function LoginPage() {
             placeholder="password"
             error={errorPassWord}
             value={passWord}
+            onBlur={chackPassWord}
             onChange={(e) => onInputPassWord(e.target.value)}
           />
           <div className="pt-1">
