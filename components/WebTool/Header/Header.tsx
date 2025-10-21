@@ -9,9 +9,9 @@ const TOOL_CATEGORIES = [
     id: 'gif',
     name: 'GIF',
     tools: [
-      { name: 'GIF合并', href: '/gif-merger', description: '合并多个GIF文件' },
+      { name: 'GIF合并', href: '/WebTool/gif-merger', description: '合并多个GIF文件' },
+      { name: 'GIF批量水印', href: '/WebTool/gif-watermark', description: '批量添加水印'},
       { name: 'MP4转GIF', href: '/video-to-gif', description: '视频转GIF动图', comingSoon: true },
-      { name: 'GIF批量水印', href: '/gif-watermark', description: '批量添加水印', comingSoon: true },
       { name: 'GIF压缩', href: '/gif-compress', description: '压缩GIF文件大小', comingSoon: true },
     ],
   },

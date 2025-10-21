@@ -60,7 +60,7 @@ export default function LoginPage() {
     const isPassWordValid = chackPassWord();
 
     if (!isEmailValid || !isPassWordValid) return
-    
+
     
     setIsLoading(true)
     try {
@@ -108,7 +108,7 @@ export default function LoginPage() {
       {/* 登录表单  */}
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-md">
-          <h1 className="text-4xl font-bold text-center text-black dark:text-white mb-8">
+          <h1 className="text-5xl font-bold text-center text-black dark:text-white mb-8">
             登录
           </h1>
         
@@ -158,10 +158,7 @@ export default function LoginPage() {
           </button>
           <button
             type="button"
-            onClick={() => {
-              // TODO: 实现忘记密码逻辑
-              console.log('忘记密码')
-            }}
+            onClick={() => router.push('/Auth/login/forgot')}
             className="text-black dark:text-white hover:opacity-70 transition-opacity text-sm"
           >
             忘记密码？

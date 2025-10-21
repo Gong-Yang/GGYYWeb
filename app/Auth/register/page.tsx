@@ -135,7 +135,7 @@ export default function RegisterPage() {
       {/* 注册表单  */}
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-md">
-          <h1 className="text-4xl font-bold text-center text-black dark:text-white mb-16">
+          <h1 className="text-5xl font-bold text-center text-black dark:text-white mb-16">
             注册
           </h1>
         

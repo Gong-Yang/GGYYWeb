@@ -12,7 +12,7 @@ import type { GifObject, WatermarkInfo } from './types';
 export function GifMergerTool() {
   const [gifObjects, setGifObjects] = useState<GifObject[]>([]);
   const [watermarks, setWatermarks] = useState<WatermarkInfo[]>([]);
-  const [showFrameDebug, setShowFrameDebug] = useState(false);
+  const [showFrameDebug, setShowFrameDebug] = useState<boolean>(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // 处理文件添加

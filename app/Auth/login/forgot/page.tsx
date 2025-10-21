@@ -12,7 +12,7 @@ interface Results {
   message: string;
 }
 
-export default function RegisterActivePage() {
+export default function LoginForgotPage() {
   const router = useRouter()
   const [userInfo, setUserInfo] = useState<{ nickname: string; email: string }>({
     nickname: "a",
@@ -147,7 +147,7 @@ export default function RegisterActivePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-black">
       {/* 返回登录页面按钮  */}
-      {/* <div className="absolute top-6 left-6">
+      <div className="absolute top-6 left-6">
         <button
           onClick={() => router.push('/Auth/login')}
           className="flex items-center gap-2 text-white dark:text-black hover:opacity-80 transition-opacity"
@@ -171,13 +171,13 @@ export default function RegisterActivePage() {
           </div>
           <span className="ml-2 text-sm text-black dark:text-white">登录</span>
         </button>
-      </div> */}
+      </div>
 
       {/* 注册表单  */}
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-md">
           <h1 className="text-5xl font-bold text-center text-black dark:text-white mb-12">
-            注册
+            忘记密码
           </h1>
         
         <form 
@@ -211,7 +211,7 @@ export default function RegisterActivePage() {
               fullWidth
               disabled={isSending}
             >
-              {isSending ? '注册中...' : '注册'}
+              {isSending ? '修改中...' : '修改密码'}
             </Button>
           </div>
         </form>
