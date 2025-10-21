@@ -296,18 +296,6 @@ export function GifMergerTool() {
           </p>
         </div>
       )}
-
-      {/* 技术说明 */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-          技术实现说明
-        </h3>
-        <div className="text-sm text-gray-700 dark:text-gray-300 space-y-2">
-          <p>• <strong>帧处理</strong>：正确实现累积渲染机制和Disposal方法处理</p>
-          <p>• <strong>时序同步</strong>：以最长GIF的帧数为播放周期，短GIF播放完后定格在最后一帧</p>
-          <p>• <strong>透明支持</strong>：完整支持透明背景GIF的合并</p>
-        </div>
-      </div>
     </div>
   );
 }

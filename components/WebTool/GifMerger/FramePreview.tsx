@@ -40,20 +40,17 @@ export function FramePreview({ frame, frameIndex, gifWidth, gifHeight }: FramePr
   }, [frame, frameIndex, gifWidth, gifHeight]);
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center gap-1">
       <canvas
         ref={canvasRef}
-        className="w-12 h-12 border border-gray-300 dark:border-gray-600 rounded"
+        className="w-full aspect-square border border-gray-200 dark:border-gray-700 rounded"
         style={{
           imageRendering: 'pixelated',
           backgroundColor: 'transparent'
         }}
       />
-      <span className="text-xs text-gray-500 mt-1">帧{frameIndex}</span>
-      <div className="text-xs text-gray-400 mt-1 text-center">
-        <div>{frame.delay}ms</div>
-        <div>disposal: {frame.disposal}</div>
-      </div>
+      <span className="text-[10px] text-gray-500 dark:text-gray-400">帧{frameIndex}</span>
+      <span className="text-[10px] text-gray-400 dark:text-gray-500">{frame.delay}ms</span>
     </div>
   );
 }

@@ -155,8 +155,8 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
             const gifX = x + offsetX;
             const gifY = y + offsetY;
             
-            // 获取当前帧数据（循环播放：帧数不足时使用模运算循环）
-            const actualFrameIndex = frameIndex % gifObj.frameCount;
+            // 获取当前帧数据（帧数不足时定格在第一帧）
+            const actualFrameIndex = frameIndex < gifObj.frameCount ? frameIndex : 0;
             const frameData = gifObj.frames[actualFrameIndex];
             
             if (frameData) {
@@ -264,7 +264,7 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
           <select
             value={options.backgroundColor}
             onChange={(e) => setOptions((prev) => ({ ...prev, backgroundColor: e.target.value as 'transparent' | 'white' | 'black' | 'original' }))}
-            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 focus:border-transparent transition-shadow"
           >
             <option value="original">原图背景</option>
             <option value="transparent">透明</option>
@@ -275,7 +275,7 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
         
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            帧持续时间 (ms)
+            帧间隔 (ms)
           </label>
           <input
             type="number"
@@ -284,13 +284,13 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
             step="10"
             value={options.frameDuration}
             onChange={(e) => setOptions((prev) => ({ ...prev, frameDuration: parseInt(e.target.value) || 100 }))}
-            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 focus:border-transparent transition-shadow"
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            网格列数（仅平面合并）
+            网格列数
           </label>
           <input
             type="number"
@@ -300,54 +300,51 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
             value={options.columns || ''}
             onChange={(e) => setOptions((prev: MergeOptions) => ({ ...prev, columns: parseInt(e.target.value) || undefined }))}
             placeholder="自动计算"
-            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 focus:border-transparent transition-shadow"
           />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            留空或0时自动计算最佳布局
-          </p>
         </div>
       </div>
 
       {/* 导出按钮 */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <button
           onClick={() => exportGif('grid')}
           disabled={disabled || isExporting || gifObjects.length === 0}
-          className="px-6 py-3 bg-black hover:bg-gray-700 disabled:bg-gray-400 text-white dark:bg-white dark:text-black dark:hover:bg-gray-200 font-medium rounded-lg transition-colors flex-1 sm:flex-none"
+          className="px-6 py-3 bg-gray-900 hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 dark:disabled:bg-gray-600 font-medium rounded-lg transition-colors flex-1 sm:flex-none"
         >
-          {isExporting ? `合并中... ${progress}%` : '平面合并GIF'}
+          {isExporting ? `合并中 ${progress}%` : '平面合并'}
         </button>
         <button
           onClick={() => exportGif('sequence')}
           disabled={disabled || isExporting || gifObjects.length === 0}
-          className="px-6 py-3 bg-black hover:bg-gray-700 disabled:bg-gray-400 text-white dark:bg-white dark:text-black dark:hover:bg-gray-200 font-medium rounded-lg transition-colors flex-1 sm:flex-none"
+          className="px-6 py-3 bg-gray-900 hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 dark:disabled:bg-gray-600 font-medium rounded-lg transition-colors flex-1 sm:flex-none"
         >
-          {isExporting ? `合并中... ${progress}%` : '连续播放合并GIF'}
+          {isExporting ? `合并中 ${progress}%` : '连续合并'}
         </button>
       </div>
       
-      {/* 按钮说明 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
-        <div className="text-center">
-          <div className="font-medium text-gray-900 dark:text-white mb-1">平面合并</div>
-          <div>所有GIF同时显示在网格布局中</div>
+      {/* 模式说明 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-400">
+        <div className="text-center px-3 py-2 bg-gray-50 dark:bg-gray-900/30 rounded-lg">
+          <div className="font-medium text-gray-900 dark:text-white">平面合并</div>
+          <div className="text-xs mt-0.5">所有GIF同时显示在网格中</div>
         </div>
-        <div className="text-center">
-          <div className="font-medium text-gray-900 dark:text-white mb-1">连续播放</div>
-          <div>按顺序连续播放每个GIF</div>
+        <div className="text-center px-3 py-2 bg-gray-50 dark:bg-gray-900/30 rounded-lg">
+          <div className="font-medium text-gray-900 dark:text-white">连续合并</div>
+          <div className="text-xs mt-0.5">按顺序连续播放每个GIF</div>
         </div>
       </div>
 
       {/* 进度条 */}
       {isExporting && (
         <div className="w-full">
-          <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+          <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
             <span>合并进度</span>
-            <span>{progress}%</span>
+            <span className="font-medium">{progress}%</span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
             <div 
-              className="bg-black dark:bg-white h-2 rounded-full transition-all duration-300"
+              className="bg-gray-900 dark:bg-white h-full transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
@@ -356,59 +353,35 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
 
       {/* 导出结果 */}
       {exportedGif && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+        <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+          <h3 className="text-base font-semibold mb-4 text-gray-900 dark:text-white">
             合并结果
           </h3>
           <div className="text-center space-y-4">
-            <div className="relative inline-block">
+            <div className="inline-block bg-white dark:bg-gray-800 p-3 rounded-lg">
               <Image
                 src={exportedGif}
                 alt="合并后的GIF"
-                width={300}
-                height={200}
-                className="max-w-full max-h-64 border border-gray-200 dark:border-gray-600 rounded"
+                width={400}
+                height={300}
+                className="max-w-full max-h-80 rounded-lg"
                 unoptimized
               />
             </div>
             <button
               onClick={downloadGif}
-              className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-700 dark:bg-white dark:text-black dark:hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gray-900 hover:bg-gray-700 text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 font-medium rounded-lg transition-colors"
             >
-              下载合并后的GIF
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              下载合并结果
             </button>
           </div>
         </div>
       )}
 
-      {/* 使用说明 */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-400">
-        <h4 className="font-medium mb-2">合并模式说明：</h4>
-        <div className="space-y-2">
-          <div>
-            <strong className="text-gray-900 dark:text-white">网格平面合并：</strong>
-            <ul className="ml-4 mt-1 space-y-1">
-              <li>• 所有GIF同时显示在同一画面中</li>
-              <li>• 自动网格排列布局</li>
-              <li>• 以最长GIF为播放周期</li>
-            </ul>
-          </div>
-          <div>
-            <strong className="text-gray-900 dark:text-white">连续播放合并：</strong>
-            <ul className="ml-4 mt-1 space-y-1">
-              <li>• 按上传顺序连续播放每个GIF</li>
-              <li>• 合并为一个连续的长动画</li>
-              <li>• 各GIF保持原始尺寸和帧率</li>
-            </ul>
-          </div>
-        </div>
-        <h4 className="font-medium mt-4 mb-2">技术特性：</h4>
-        <ul className="space-y-1">
-          <li>• 保持原始动画时序和帧延迟</li>
-          <li>• 支持透明背景和颜色背景</li>
-          <li>• 实时进度显示</li>
-        </ul>
-      </div>
+      
     </div>
   );
 }

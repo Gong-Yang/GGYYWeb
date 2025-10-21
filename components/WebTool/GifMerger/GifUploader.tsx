@@ -215,23 +215,23 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
       <div
         {...getRootProps()}
         className={`
-          border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+          border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all
           ${isProcessing 
-            ? 'border-gray-300 bg-gray-100 cursor-not-allowed'
+            ? 'border-gray-300 bg-gray-50 dark:bg-gray-900/30 cursor-not-allowed'
             : isDragActive 
-              ? 'border-gray-900 bg-gray-50 dark:border-white dark:bg-gray-800' 
-              : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+              ? 'border-gray-900 bg-gray-100 dark:border-white dark:bg-gray-900/50 scale-[1.01]' 
+              : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900/20'
           }
         `}
       >
         <input {...getInputProps()} />
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex justify-center">
             {isProcessing ? (
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-black dark:border-white"></div>
+              <div className="animate-spin rounded-full h-14 w-14 border-b-2 border-gray-900 dark:border-white"></div>
             ) : (
               <svg
-                className="w-16 h-16 text-gray-400"
+                className="w-14 h-14 text-gray-400 dark:text-gray-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -239,33 +239,26 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                 />
               </svg>
             )}
           </div>
           <div>
-            <p className="text-lg font-medium text-gray-900 dark:text-white">
+            <p className="text-base font-medium text-gray-900 dark:text-white">
               {isProcessing 
                 ? '正在解析GIF文件...' 
                 : isDragActive 
-                  ? '放下GIF文件' 
-                  : '拖拽GIF文件到这里'
+                  ? '释放以上传文件' 
+                  : '拖拽GIF文件到此处，或点击上传'
               }
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              或点击选择文件（支持多选，最多{maxFiles}个，每个最大50MB）
+              支持多选，最多{maxFiles}个文件，单个文件最大50MB
             </p>
           </div>
         </div>
-      </div>
-      
-      <div className="mt-4 text-sm text-gray-600 dark:text-gray-400 space-y-1">
-        <p>• 保持原始动画帧序列和时间</p>
-        <p>• 自动以最长GIF的帧数为播放周期</p>
-        <p>• 较短GIF播放完后定格在最后一帧</p>
-        <p>• 支持透明背景GIF合并</p>
       </div>
     </div>
   );

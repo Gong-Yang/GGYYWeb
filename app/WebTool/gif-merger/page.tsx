@@ -27,52 +27,17 @@ export const metadata: Metadata = {
 export default function GifMergerPage() {
   return (
     <div className="bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            GIF处理工具
+      <div className="max-w-[1300px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center mb-12">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+            GIF合并工具
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-4">
-            精确解析和支持合并多个GIF动画文件。支持透明背景、网格布局和时序同步，
-            保持原始动画效果。
+          <p className="text-base text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+            在线合并多个GIF动画，支持透明背景和时序同步
           </p>
-          <div className="flex flex-wrap justify-center gap-2 text-sm text-gray-500 dark:text-[#828282]">
-            <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">精确帧解析</span>
-            <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">透明背景支持</span>
-            <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">时序同步</span>
-            <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">标准GIF输出</span>
-          </div>
         </div>
         
         <GifMergerTool />
-        
-        {/* SEO内容区域 */}
-        <div className="mt-16 max-w-4xl mx-auto">
-          <div className="prose prose-gray dark:prose-invert max-w-none">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              关于GIF处理工具
-            </h2>
-            <div className="grid md:grid-cols-2 gap-8 text-gray-600 dark:text-gray-300">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">核心特性</h3>
-                <ul className="space-y-2">
-                  <li>• 保持原始动画时序和帧延迟</li>
-                  <li>• 支持透明、白色、黑色背景</li>
-                  <li>• 智能网格布局自动排列</li>
-                  <li>• 以最长GIF为播放周期</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">技术优势</h3>
-                <ul className="space-y-2">
-                  <li>• 生成标准GIF格式文件</li>
-                  <li>• 完整保留动画特性</li>
-                  <li>• 跨平台兼容性</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
