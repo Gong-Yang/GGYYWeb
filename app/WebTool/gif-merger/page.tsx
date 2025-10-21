@@ -4,11 +4,11 @@ import { GifMergerTool } from '@/components/WebTool/GifMerger/GifMergerTool';
 
 export const metadata: Metadata = {
   title: 'GIF处理工具 - 在线多GIF动画合并编辑器 | WebTool',
-  description: '专业的在线GIF处理工具，使用gifuct-js和gif.js技术精确解析和生成GIF动画。支持多个GIF文件合并、PNG水印添加、透明背景、网格布局，保持原始动画效果和时序同步。',
-  keywords: 'GIF合并,GIF编辑,动图合并,在线工具,gif.js,gifuct-js,透明背景,动画合并,PNG水印',
+  description: '专业的在线GIF处理工具，使用gifuct-js和gif.js技术精确解析和生成GIF动画。支持多个GIF文件合并、透明背景、网格布局，保持原始动画效果和时序同步。',
+  keywords: 'GIF合并,GIF编辑,动图合并,在线工具,gif.js,gifuct-js,透明背景,动画合并',
   openGraph: {
     title: 'GIF处理工具 - 专业在线GIF动画合并',
-    description: '使用先进的gif.js技术，精确合并多个GIF动画，支持PNG水印和透明背景',
+    description: '使用先进的gif.js技术，精确合并多个GIF动画，支持透明背景',
     type: 'website',
     images: [{
       url: '/images/gif-merger-preview.jpg',
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'GIF处理工具 - 专业在线GIF动画合并',
-    description: '使用先进的gif.js技术，精确合并多个GIF动画，支持PNG水印'
+    description: '使用先进的gif.js技术，精确合并多个GIF动画'
   }
 };
 
@@ -33,7 +33,7 @@ export default function GifMergerPage() {
             GIF处理工具
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-4">
-            精确解析和支持合并多个GIF动画文件，支持PNG水印添加。支持透明背景、网格布局和时序同步，
+            精确解析和支持合并多个GIF动画文件。支持透明背景、网格布局和时序同步，
             保持原始动画效果。
           </p>
           <div className="flex flex-wrap justify-center gap-2 text-sm text-gray-500 dark:text-[#828282]">
@@ -57,7 +57,6 @@ export default function GifMergerPage() {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">核心特性</h3>
                 <ul className="space-y-2">
                   <li>• 保持原始动画时序和帧延迟</li>
-                  <li>• 支持PNG水印，可设置为最顶层或最底层</li>
                   <li>• 支持透明、白色、黑色背景</li>
                   <li>• 智能网格布局自动排列</li>
                   <li>• 以最长GIF为播放周期</li>
@@ -68,7 +67,6 @@ export default function GifMergerPage() {
                 <ul className="space-y-2">
                   <li>• 生成标准GIF格式文件</li>
                   <li>• 完整保留动画特性</li>
-                  <li>• PNG水印透明度保持</li>
                   <li>• 跨平台兼容性</li>
                 </ul>
               </div>

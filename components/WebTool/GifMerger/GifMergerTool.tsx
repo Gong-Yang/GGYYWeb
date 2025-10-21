@@ -6,23 +6,16 @@ import React, { useCallback, useState } from 'react';
 import { FramePreview } from './FramePreview';
 import { GifExporter } from './GifExporter';
 import { GifUploader } from './GifUploader';
-// import { WatermarkUploader } from './WatermarkUploader';
-import type { GifObject, WatermarkInfo } from './types';
+import type { GifObject } from './types';
 
 export function GifMergerTool() {
   const [gifObjects, setGifObjects] = useState<GifObject[]>([]);
-  const [watermarks, setWatermarks] = useState<WatermarkInfo[]>([]);
   const [showFrameDebug, setShowFrameDebug] = useState<boolean>(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // 处理文件添加
   const handleFilesAdded = useCallback((newGifObjects: GifObject[]) => {
     setGifObjects(prev => [...prev, ...newGifObjects]);
-  }, []);
-
-  // 处理水印变化
-  const handleWatermarkChanged = useCallback((newWatermarks: WatermarkInfo[]) => {
-    setWatermarks(newWatermarks);
   }, []);
 
   // 移除GIF文件
@@ -283,7 +276,7 @@ export function GifMergerTool() {
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             合并导出
           </h2>
-          <GifExporter gifObjects={gifObjects} watermarks={watermarks} />
+          <GifExporter gifObjects={gifObjects} />
         </div>
       )}
 
