@@ -120,14 +120,13 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
       // 生成所有合成帧
       for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
         // 设置背景
-        /*
-         “原图背景” 不做处理
-         “透明背景” 清空画布
-         “白底、黑色背景” 填充画布
-        */
-        if (options.backgroundColor === 'transparent') {
+        // "原图背景" 和 "透明背景" 都应清空画布（保持透明）
+        // "白底、黑色背景" 填充画布
+        if (options.backgroundColor === 'transparent' || options.backgroundColor === 'original') {
+          // 保持透明，清空画布
           ctx.clearRect(0, 0, canvas.width, canvas.height);
         } else if (options.backgroundColor === 'black' || options.backgroundColor === 'white') {
+          // 填充背景色
           ctx.fillStyle = options.backgroundColor === 'white' ? '#ffffff' : '#000000';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
@@ -156,8 +155,8 @@ export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) 
             const gifX = x + offsetX;
             const gifY = y + offsetY;
             
-            // 获取当前帧数据（如果帧数不足，使用第一帧）
-            const actualFrameIndex = frameIndex < gifObj.frameCount ? frameIndex : 0;
+            // 获取当前帧数据（循环播放：帧数不足时使用模运算循环）
+            const actualFrameIndex = frameIndex % gifObj.frameCount;
             const frameData = gifObj.frames[actualFrameIndex];
             
             if (frameData) {

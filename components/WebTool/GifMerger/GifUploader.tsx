@@ -42,44 +42,91 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
       // 设置canvas尺寸
       canvas.width = gif.lsd.width;
       canvas.height = gif.lsd.height;
+      
+      // 初始化画布为透明
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const processedFrames: GifFrame[] = [];
-      let previousImageData: ImageData | null = null;
-
+      
       // 处理每一帧
       for (let i = 0; i < frames.length; i++) {
         const frame = frames[i];
-        if (!frame) continue; // 跳过空帧
+        if (!frame) {
+          console.warn(`帧${i}为空，跳过`);
+          continue;
+        }
         
-        // 根据disposal方法处理画布
+        console.log(`处理帧${i}:`, {
+          dims: frame.dims,
+          disposalType: frame.disposalType,
+          delay: frame.delay,
+          hasPatch: !!frame.patch
+        });
+        
+        // 根据上一帧的disposal方法处理画布
         if (i > 0) {
           const prevFrame = frames[i - 1];
-          if (prevFrame && prevFrame.disposalType === 2) {
-            // 恢复背景色
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-          } else if (prevFrame && prevFrame.disposalType === 3 && previousImageData) {
-            // 恢复到上一帧
-            ctx.putImageData(previousImageData, 0, 0);
+          
+          if (prevFrame) {
+            if (prevFrame.disposalType === 2) {
+              // Disposal Type 2: 恢复到背景色（清除上一帧区域）
+              if (prevFrame.dims) {
+                ctx.clearRect(
+                  prevFrame.dims.left,
+                  prevFrame.dims.top,
+                  prevFrame.dims.width,
+                  prevFrame.dims.height
+                );
+              }
+            } else if (prevFrame.disposalType === 3) {
+              // Disposal Type 3: 恢复到渲染前的状态
+              // 查找上上一帧（i-2）的数据进行恢复
+              const restoreFrame = processedFrames[i - 2];
+              if (restoreFrame) {
+                ctx.putImageData(restoreFrame.imageData, 0, 0);
+              } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+              }
+            }
+            // Disposal Type 0/1: 不处理，保留当前画布内容（累积渲染）
+            // 这是关键：什么都不做，让新帧叠加在旧帧上
           }
         }
 
-        // 保存当前状态（用于disposal type 3）
-        if (frame.disposalType === 3) {
-          previousImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        }
-
-        // 绘制当前帧
+        // 绘制当前帧的patch数据到画布上（累积渲染）
         if (frame.patch && frame.dims) {
-          const imageData = ctx.createImageData(frame.dims.width, frame.dims.height);
-          imageData.data.set(frame.patch);
-          ctx.putImageData(imageData, frame.dims.left, frame.dims.top);
+          const { width, height, left, top } = frame.dims;
+          
+          // 创建临时canvas来处理patch数据
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = width;
+          tempCanvas.height = height;
+          const tempCtx = tempCanvas.getContext('2d');
+          
+          if (tempCtx) {
+            // 将patch数据绘制到临时canvas
+            const tempImageData = new ImageData(width, height);
+            tempImageData.data.set(frame.patch);
+            tempCtx.putImageData(tempImageData, 0, 0);
+            
+            // 使用drawImage将临时canvas绘制到主canvas上
+            // drawImage会正确处理透明度混合，而不是像putImageData那样直接替换
+            ctx.drawImage(tempCanvas, left, top);
+          }
+        } else {
+          console.warn(`帧${i}缺少patch或dims数据`);
         }
 
-        // 获取完整帧数据
+        // 获取完整帧数据（深拷贝，避免引用问题）
         const fullFrameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const copiedImageData = new ImageData(
+          new Uint8ClampedArray(fullFrameData.data),
+          fullFrameData.width,
+          fullFrameData.height
+        );
         
         processedFrames.push({
-          imageData: fullFrameData,
+          imageData: copiedImageData,
           delay: Math.max(frame.delay || 100, 50), // 最小50ms延迟
           disposal: frame.disposalType || 0
         });
