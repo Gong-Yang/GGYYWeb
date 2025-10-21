@@ -275,21 +275,6 @@ export function GifMergerTool() {
           </div>
       )}
 
-      {/* 水印上传区域 */}
-      {/* {gifObjects.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-600">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-            水印设置（可选）
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            上传PNG格式的水印图片，支持透明背景。水印将覆盖在所有GIF内容上。
-          </p>
-          <WatermarkUploader 
-            onWatermarkChanged={handleWatermarkChanged} 
-            gifObjects={gifObjects.map(gif => ({ id: gif.id, file: gif.file, url: gif.url }))}
-          />
-        </div>
-      )} */}
 
 
       {/* GIF导出区域 */}

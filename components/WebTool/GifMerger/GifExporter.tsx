@@ -59,27 +59,15 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
     mergeMode: 'grid' // 保留但不使用，只是为了类型兼容性
   });
 
-  // 动态加载gif.js
-  const loadGifJs = useCallback((): Promise<unknown> => {
-    return new Promise((resolve, reject) => {
-      const globalWindow = window as unknown as { GIF: unknown };
-      if (globalWindow.GIF) {
-        resolve(globalWindow.GIF);
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js';
-      script.onload = () => {
-        if (globalWindow.GIF) {
-          resolve(globalWindow.GIF);
-        } else {
-          reject(new Error('gif.js加载失败'));
-        }
-      };
-      script.onerror = () => reject(new Error('gif.js加载失败'));
-      document.head.appendChild(script);
-    });
+  // 动态加载gif.js（使用npm包，避免CDN失败）
+  const loadGifJs = useCallback(async () => {
+    try {
+      const mod = await import('gif.js');
+      // UMD 导出为 default
+      return (mod as unknown as { default: new (options: any) => any }).default;
+    } catch {
+      throw new Error('gif.js加载失败');
+    }
   }, []);
 
   // 加载水印图片
@@ -160,6 +148,7 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
         height: number;
         transparent?: number | null;
         background?: number | null;
+        workerScript?: string;
       }) => {
         on(event: 'progress', callback: (progress: number) => void): void;
         on(event: 'finished', callback: (blob: Blob) => void): void;
@@ -174,7 +163,9 @@ export function GifExporter({ gifObjects, watermarks = [], disabled = false }: G
         height: totalHeight,
         transparent: options.backgroundColor === 'transparent' ? 0x000000 : null,
         background: options.backgroundColor === 'white' ? 0xffffff : 
-                   options.backgroundColor === 'black' ? 0x000000 : null
+                   options.backgroundColor === 'black' ? 0x000000 : null,
+        // 指定 worker 路径，Next.js 会从 /public 提供 /gif.worker.js
+        workerScript: '/gif.worker.js'
       });
 
       // 监听进度
