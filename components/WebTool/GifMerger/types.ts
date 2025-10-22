@@ -21,4 +21,8 @@ export interface MergeOptions {
   columns?: number; // 网格列数，不指定时自动计算
   frameDuration: number; // 合并后的帧持续时间（毫秒）
   mergeMode?: 'grid' | 'sequence'; // 合并模式：网格平面合并或连续播放合并（可选，为了类型兼容性）
+  targetWidth?: number; // 目标宽度（像素）
+  targetHeight?: number; // 目标高度（像素）
+  lockAspectRatio: boolean; // 是否锁定宽高比
+  interpolation: 'nearest' | 'bilinear'; // 图像缩放插值方式
 }

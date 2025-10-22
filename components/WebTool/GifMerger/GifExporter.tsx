@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import React, { useCallback, useEffect, useState } from 'react';
 import type { GifObject, MergeOptions } from './types';
+import { SizeInput } from './SizeInput';
 
 interface GifExporterProps {
   gifObjects: GifObject[];
@@ -17,8 +18,13 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
   const [options, setOptions] = useState<MergeOptions>({
     backgroundColor: defaultBackgroundColor,
     frameDuration: 100,
-    mergeMode: 'grid'
+    mergeMode: 'grid',
+    lockAspectRatio: true,
+    interpolation: 'nearest'
   });
+  
+  const [originalWidth, setOriginalWidth] = useState<number>(0);
+  const [originalHeight, setOriginalHeight] = useState<number>(0);
 
   // 当 defaultBackgroundColor 变化时，更新 options
   useEffect(() => {
@@ -27,6 +33,40 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
       backgroundColor: defaultBackgroundColor
     }));
   }, [defaultBackgroundColor]);
+  
+  // 当 gifObjects 变化时，计算原始合成尺寸
+  useEffect(() => {
+    if (gifObjects.length === 0) {
+      setOriginalWidth(0);
+      setOriginalHeight(0);
+      setOptions(prev => ({
+        ...prev,
+        targetWidth: undefined,
+        targetHeight: undefined
+      }));
+      return;
+    }
+    
+    // 假设默认为网格模式计算尺寸
+    const cols = options.columns || Math.ceil(Math.sqrt(gifObjects.length));
+    const rows = Math.ceil(gifObjects.length / cols);
+    const maxWidth = Math.max(...gifObjects.map(g => g.width));
+    const maxHeight = Math.max(...gifObjects.map(g => g.height));
+    const width = cols * maxWidth;
+    const height = rows * maxHeight;
+    
+    setOriginalWidth(width);
+    setOriginalHeight(height);
+    
+    // 默认设置目标尺寸为原始尺寸
+    if (!options.targetWidth && !options.targetHeight) {
+      setOptions(prev => ({
+        ...prev,
+        targetWidth: width,
+        targetHeight: height
+      }));
+    }
+  }, [gifObjects, options.columns]);
 
   // 动态加载gif.js（使用npm包，避免CDN失败）
   const loadGifJs = useCallback(async () => {
@@ -58,6 +98,7 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
 
       // 计算画布尺寸和帧数
       let totalWidth: number, totalHeight: number, totalFrames: number;
+      let sourceWidth: number, sourceHeight: number; // 原始合成尺寸
       
       if (mergeMode === 'grid') {
         // 网格合并模式
@@ -65,15 +106,19 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
         const rows = Math.ceil(gifObjects.length / cols);
         const maxWidth = Math.max(...gifObjects.map(g => g.width));
         const maxHeight = Math.max(...gifObjects.map(g => g.height));
-        totalWidth = cols * maxWidth;
-        totalHeight = rows * maxHeight;
+        sourceWidth = cols * maxWidth;
+        sourceHeight = rows * maxHeight;
         totalFrames = Math.max(...gifObjects.map(g => g.frameCount));
       } else {
         // 连续播放合并模式
-        totalWidth = Math.max(...gifObjects.map(g => g.width));
-        totalHeight = Math.max(...gifObjects.map(g => g.height));
+        sourceWidth = Math.max(...gifObjects.map(g => g.width));
+        sourceHeight = Math.max(...gifObjects.map(g => g.height));
         totalFrames = gifObjects.reduce((sum, g) => sum + g.frameCount, 0);
       }
+      
+      // 应用目标尺寸（如果设置了）
+      totalWidth = options.targetWidth || sourceWidth;
+      totalHeight = options.targetHeight || sourceHeight;
       
       console.log('合并参数:', { 
         totalWidth, 
@@ -116,7 +161,17 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
         setProgress(Math.round(p * 100));
       });
 
-      // 创建合成画布
+      // 创建源画布（原始尺寸）
+      const sourceCanvas = document.createElement('canvas');
+      sourceCanvas.width = sourceWidth;
+      sourceCanvas.height = sourceHeight;
+      const sourceCtx = sourceCanvas.getContext('2d');
+      
+      if (!sourceCtx) {
+        throw new Error('无法创建源画布上下文');
+      }
+      
+      // 创建目标画布（缩放后尺寸）
       const canvas = document.createElement('canvas');
       canvas.width = totalWidth;
       canvas.height = totalHeight;
@@ -125,19 +180,18 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
       if (!ctx) {
         throw new Error('无法创建画布上下文');
       }
+      
+      // 设置图像缩放插值方式
+      ctx.imageSmoothingEnabled = options.interpolation === 'bilinear';
 
       // 生成所有合成帧
       for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
-        // 设置背景
-        // "原图背景" 和 "透明背景" 都应清空画布（保持透明）
-        // "白底、黑色背景" 填充画布
+        // 先在源画布上绘制
         if (options.backgroundColor === 'transparent' || options.backgroundColor === 'original') {
-          // 保持透明，清空画布
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          sourceCtx.clearRect(0, 0, sourceCanvas.width, sourceCanvas.height);
         } else if (options.backgroundColor === 'black' || options.backgroundColor === 'white') {
-          // 填充背景色
-          ctx.fillStyle = options.backgroundColor === 'white' ? '#ffffff' : '#000000';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          sourceCtx.fillStyle = options.backgroundColor === 'white' ? '#ffffff' : '#000000';
+          sourceCtx.fillRect(0, 0, sourceCanvas.width, sourceCanvas.height);
         }
         
         if (mergeMode === 'grid') {
@@ -177,7 +231,7 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
               
               if (tempCtx) {
                 tempCtx.putImageData(frameData.imageData, 0, 0);
-                ctx.drawImage(tempCanvas, gifX, gifY);
+                sourceCtx.drawImage(tempCanvas, gifX, gifY);
               }
             }
           }
@@ -204,8 +258,8 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
             
             if (frameData) {
               // 居中绘制当前GIF的帧
-              const offsetX = (totalWidth - selectedGif.width) / 2;
-              const offsetY = (totalHeight - selectedGif.height) / 2;
+              const offsetX = (sourceWidth - selectedGif.width) / 2;
+              const offsetY = (sourceHeight - selectedGif.height) / 2;
               
               // 创建临时画布绘制单个GIF帧
               const tempCanvas = document.createElement('canvas');
@@ -215,11 +269,20 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
               
               if (tempCtx) {
                 tempCtx.putImageData(frameData.imageData, 0, 0);
-                ctx.drawImage(tempCanvas, offsetX, offsetY);
+                sourceCtx.drawImage(tempCanvas, offsetX, offsetY);
               }
             }
           }
         }
+        
+        // 将源画布缩放到目标画布
+        if (options.backgroundColor === 'transparent' || options.backgroundColor === 'original') {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        } else if (options.backgroundColor === 'black' || options.backgroundColor === 'white') {
+          ctx.fillStyle = options.backgroundColor === 'white' ? '#ffffff' : '#000000';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(sourceCanvas, 0, 0, totalWidth, totalHeight);
         
         // 添加帧到GIF
         gif.addFrame(ctx, {
@@ -261,6 +324,41 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
       link.click();
     }
   }, [exportedGif]);
+  
+  // 处理宽度变化
+  const handleWidthChange = useCallback((value: number) => {
+    setOptions(prev => {
+      const newOptions = { ...prev, targetWidth: value };
+      
+      if (prev.lockAspectRatio && originalWidth > 0 && originalHeight > 0) {
+        // 按比例调整高度
+        const aspectRatio = originalHeight / originalWidth;
+        newOptions.targetHeight = Math.round(value * aspectRatio);
+      }
+      
+      return newOptions;
+    });
+  }, [originalWidth, originalHeight]);
+  
+  // 处理高度变化
+  const handleHeightChange = useCallback((value: number) => {
+    setOptions(prev => {
+      const newOptions = { ...prev, targetHeight: value };
+      
+      if (prev.lockAspectRatio && originalWidth > 0 && originalHeight > 0) {
+        // 按比例调整宽度
+        const aspectRatio = originalWidth / originalHeight;
+        newOptions.targetWidth = Math.round(value * aspectRatio);
+      }
+      
+      return newOptions;
+    });
+  }, [originalWidth, originalHeight]);
+  
+  // 切换锁定状态
+  const toggleLockAspectRatio = useCallback(() => {
+    setOptions(prev => ({ ...prev, lockAspectRatio: !prev.lockAspectRatio }));
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -313,6 +411,83 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
           />
         </div>
       </div>
+      
+      {/* 尺寸调整选项 */}
+      {originalWidth > 0 && originalHeight > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              输出尺寸
+            </label>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              原始: {originalWidth} × {originalHeight} px
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4">
+            {/* 尺寸输入区域 */}
+            <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-end">
+              <SizeInput
+                label="宽度 (px)"
+                value={options.targetWidth}
+                onChange={handleWidthChange}
+                originalSize={originalWidth}
+                min={1}
+                max={10000}
+              />
+              
+              <button
+                type="button"
+                onClick={toggleLockAspectRatio}
+                className={`mb-2 p-2 rounded-lg transition-colors ${
+                  options.lockAspectRatio
+                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                }`}
+                title={options.lockAspectRatio ? '点击解锁宽高比' : '点击锁定宽高比'}
+              >
+                {options.lockAspectRatio ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                  </svg>
+                )}
+              </button>
+              
+              <SizeInput
+                label="高度 (px)"
+                value={options.targetHeight}
+                onChange={handleHeightChange}
+                originalSize={originalHeight}
+                min={1}
+                max={10000}
+              />
+            </div>
+            
+            {/* 插值方式选择 */}
+            <div className="lg:min-w-[280px]">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                插值方式
+              </label>
+              <select
+                value={options.interpolation}
+                onChange={(e) => setOptions((prev) => ({ ...prev, interpolation: e.target.value as 'nearest' | 'bilinear' }))}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 focus:border-transparent transition-shadow"
+              >
+                <option value="nearest">临近（像素风）</option>
+                <option value="bilinear">双线性（日常）</option>
+              </select>
+            </div>
+          </div>
+          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            {options.interpolation === 'nearest' 
+              ? '💡 保持像素清晰锐利，适合卡通、像素艺术风格的 GIF' 
+              : '💡 缩放后图像平滑，减少锯齿，适合照片类 GIF'}
+          </div>
+        </div>
+      )}
 
       {/* 导出按钮 */}
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
