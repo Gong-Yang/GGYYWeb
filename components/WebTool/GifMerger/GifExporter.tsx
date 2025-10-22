@@ -61,6 +61,8 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
   const [exportedGif, setExportedGif] = useState<string | null>(null);
   // 导出进度（0-100）
   const [progress, setProgress] = useState(0);
+  // 实际导出时的尺寸（用于预览显示）
+  const [exportedDimensions, setExportedDimensions] = useState<{ width: number; height: number } | null>(null);
   // 合并配置选项
   const [options, setOptions] = useState<MergeOptions>({
     backgroundColor: defaultBackgroundColor,
@@ -69,16 +71,65 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
     lockAspectRatio: true,
     interpolation: 'nearest'
   });
-  // 原始合成尺寸
+  // 原始合成尺寸（根据模式不同而变化）
   const [originalWidth, setOriginalWidth] = useState<number>(0);
   const [originalHeight, setOriginalHeight] = useState<number>(0);
+
+  /**
+   * 根据合并模式和网格配置计算原始画布尺寸
+   * @param gifObjects - GIF对象列表
+   * @param mergeMode - 合并模式
+   * @param columns - 网格列数（可选）
+   * @returns 原始宽度和高度
+   */
+  const calculateOriginalDimensions = useCallback((gifObjects: GifObject[], mergeMode: 'grid' | 'sequence' = 'grid', columns?: number) => {
+    if (gifObjects.length === 0) {
+      return { width: 0, height: 0 };
+    }
+    
+    if (mergeMode === 'grid') {
+      // 平面合并：使用网格拼接尺寸
+      const canvasSize = calculateCanvasSize(gifObjects, columns);
+      return { width: canvasSize.width, height: canvasSize.height };
+    } else {
+      // 连续合并：使用单个GIF的最大尺寸
+      const width = Math.max(...gifObjects.map(g => g.width));
+      const height = Math.max(...gifObjects.map(g => g.height));
+      return { width, height };
+    }
+  }, []);
+  
+  /**
+   * 根据缩放比例更新目标尺寸
+   * @param newWidth - 新的原始宽度
+   * @param newHeight - 新的原始高度
+   * @param currentWidth - 当前目标宽度
+   * @param oldWidth - 旧的原始宽度
+   * @param lockAspectRatio - 是否锁定宽高比
+   * @returns 新的目标尺寸
+   */
+  const calculateTargetDimensions = useCallback((newWidth: number, newHeight: number, currentWidth: number | undefined, oldWidth: number, lockAspectRatio: boolean) => {
+    // 如果锁定了宽高比且已经设置了目标宽度，保持缩放比例
+    if (lockAspectRatio && currentWidth && oldWidth > 0) {
+      const scale = currentWidth / oldWidth;
+      return {
+        targetWidth: Math.round(newWidth * scale),
+        targetHeight: Math.round(newHeight * scale)
+      };
+    }
+    // 否则直接使用新的原始尺寸
+    return {
+      targetWidth: newWidth,
+      targetHeight: newHeight
+    };
+  }, []);
 
   // 同步默认背景颜色
   useEffect(() => {
     setOptions(prev => ({ ...prev, backgroundColor: defaultBackgroundColor }));
   }, [defaultBackgroundColor]);
   
-  // 计算并设置原始合成尺寸
+  // 计算并设置原始合成尺寸（根据合并模式动态计算）
   useEffect(() => {
     if (gifObjects.length === 0) {
       setOriginalWidth(0);
@@ -87,14 +138,27 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
       return;
     }
     
-    const { width, height } = calculateCanvasSize(gifObjects, options.columns);
-    setOriginalWidth(width);
-    setOriginalHeight(height);
+    const { width, height } = calculateOriginalDimensions(gifObjects, options.mergeMode, options.columns);
     
-    if (!options.targetWidth && !options.targetHeight) {
-      setOptions(prev => ({ ...prev, targetWidth: width, targetHeight: height }));
-    }
-  }, [gifObjects, options.columns]);
+    // 使用函数式更新来避免依赖循环
+    setOriginalWidth(prevWidth => {
+      setOriginalHeight(height);
+      
+      // 动态更新目标尺寸（网格列数改变时自动更新）
+      setOptions(prev => {
+        const { targetWidth, targetHeight } = calculateTargetDimensions(
+          width,
+          height,
+          prev.targetWidth,
+          prevWidth,
+          prev.lockAspectRatio
+        );
+        return { ...prev, targetWidth, targetHeight };
+      });
+      
+      return width;
+    });
+  }, [gifObjects, options.columns, options.mergeMode, calculateOriginalDimensions, calculateTargetDimensions]);
 
   /**
    * 动态加载 gif.js 库
@@ -144,6 +208,9 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
       // 应用目标尺寸（如果设置了）
       const totalWidth = options.targetWidth || sourceWidth;
       const totalHeight = options.targetHeight || sourceHeight;
+      
+      // 保存实际导出的尺寸（用于预览显示）
+      setExportedDimensions({ width: totalWidth, height: totalHeight });
 
       // 创建 gif.js 实例
       const GifConstructor = GIF as unknown as new (options: {
@@ -353,65 +420,204 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
   }, []);
 
   return (
-    <div className="space-y-6">
-      {/* 导出选项 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            背景颜色
-          </label>
-          <select
-            value={options.backgroundColor}
-            onChange={(e) => setOptions((prev) => ({ ...prev, backgroundColor: e.target.value as 'transparent' | 'white' | 'black' | 'original' }))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 focus:border-transparent transition-shadow"
+    <div className="space-y-8">
+      {/* 合并模式选择 - 核心功能区 */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-1 h-5 bg-gray-900 dark:bg-white rounded-full"></div>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+            合并方式
+          </h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* 平面合并卡片 */}
+          <button
+            type="button"
+            onClick={() => setOptions((prev) => ({ ...prev, mergeMode: 'grid' }))}
+            className={`relative p-5 rounded-xl border-2 transition-all duration-200 text-left ${
+              options.mergeMode === 'grid'
+                ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-white shadow-lg scale-[1.02]'
+                : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-md'
+            }`}
           >
-            <option value="original">原图背景</option>
-            <option value="transparent">透明</option>
-            <option value="white">白色</option>
-            <option value="black">黑色</option>
-          </select>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            帧间隔 (ms)
-          </label>
-          <input
-            type="number"
-            min="50"
-            max="1000"
-            step="10"
-            value={options.frameDuration}
-            onChange={(e) => setOptions((prev) => ({ ...prev, frameDuration: parseInt(e.target.value) || 100 }))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 focus:border-transparent transition-shadow"
-          />
-        </div>
+            <div className="flex items-start gap-3">
+              <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                options.mergeMode === 'grid'
+                  ? 'bg-white dark:bg-gray-900'
+                  : 'bg-gray-100 dark:bg-gray-700'
+              }`}>
+                <svg className={`w-6 h-6 ${
+                  options.mergeMode === 'grid'
+                    ? 'text-gray-900 dark:text-white'
+                    : 'text-gray-600 dark:text-gray-400'
+                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <div className={`font-semibold text-lg mb-1 ${
+                  options.mergeMode === 'grid'
+                    ? 'text-white dark:text-gray-900'
+                    : 'text-gray-900 dark:text-white'
+                }`}>
+                  平面合并（网格）
+                </div>
+                <div className={`text-sm ${
+                  options.mergeMode === 'grid'
+                    ? 'text-gray-200 dark:text-gray-700'
+                    : 'text-gray-600 dark:text-gray-400'
+                }`}>
+                  所有GIF同时显示在网格中
+                </div>
+                <div className={`text-xs mt-2 ${
+                  options.mergeMode === 'grid'
+                    ? 'text-gray-300 dark:text-gray-600'
+                    : 'text-gray-500 dark:text-gray-500'
+                }`}>
+                  💡 适合：对比图、拼贴效果
+                </div>
+              </div>
+              {options.mergeMode === 'grid' && (
+                <div className="absolute top-3 right-3">
+                  <svg className="w-6 h-6 text-white dark:text-gray-900" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </div>
+          </button>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            网格列数
-          </label>
-          <input
-            type="number"
-            min="0"
-            max="10"
-            step="1"
-            value={options.columns || ''}
-            onChange={(e) => setOptions((prev: MergeOptions) => ({ ...prev, columns: parseInt(e.target.value) || undefined }))}
-            placeholder="自动计算"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 focus:border-transparent transition-shadow"
-          />
+          {/* 连续合并卡片 */}
+          <button
+            type="button"
+            onClick={() => setOptions((prev) => ({ ...prev, mergeMode: 'sequence' }))}
+            className={`relative p-5 rounded-xl border-2 transition-all duration-200 text-left ${
+              options.mergeMode === 'sequence'
+                ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-white shadow-lg scale-[1.02]'
+                : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-md'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                options.mergeMode === 'sequence'
+                  ? 'bg-white dark:bg-gray-900'
+                  : 'bg-gray-100 dark:bg-gray-700'
+              }`}>
+                <svg className={`w-6 h-6 ${
+                  options.mergeMode === 'sequence'
+                    ? 'text-gray-900 dark:text-white'
+                    : 'text-gray-600 dark:text-gray-400'
+                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <div className={`font-semibold text-lg mb-1 ${
+                  options.mergeMode === 'sequence'
+                    ? 'text-white dark:text-gray-900'
+                    : 'text-gray-900 dark:text-white'
+                }`}>
+                  连续合并（顺序）
+                </div>
+                <div className={`text-sm ${
+                  options.mergeMode === 'sequence'
+                    ? 'text-gray-200 dark:text-gray-700'
+                    : 'text-gray-600 dark:text-gray-400'
+                }`}>
+                  按顺序连续播放每个GIF
+                </div>
+                <div className={`text-xs mt-2 ${
+                  options.mergeMode === 'sequence'
+                    ? 'text-gray-300 dark:text-gray-600'
+                    : 'text-gray-500 dark:text-gray-500'
+                }`}>
+                  💡 适合：长动画、视频序列
+                </div>
+              </div>
+              {options.mergeMode === 'sequence' && (
+                <div className="absolute top-3 right-3">
+                  <svg className="w-6 h-6 text-white dark:text-gray-900" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* 其他导出选项 */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-1 h-5 bg-gray-900 dark:bg-white rounded-full"></div>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+            输出设置
+          </h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              帧间隔 (ms)
+            </label>
+            <input
+              type="number"
+              min="50"
+              max="1000"
+              step="10"
+              value={options.frameDuration}
+              onChange={(e) => setOptions((prev) => ({ ...prev, frameDuration: parseInt(e.target.value) || 100 }))}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 focus:border-transparent transition-shadow"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              背景颜色
+            </label>
+            <select
+              value={options.backgroundColor}
+              onChange={(e) => setOptions((prev) => ({ ...prev, backgroundColor: e.target.value as 'transparent' | 'white' | 'black' | 'original' }))}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 focus:border-transparent transition-shadow"
+            >
+              <option value="original">原图背景</option>
+              <option value="transparent">透明</option>
+              <option value="white">白色</option>
+              <option value="black">黑色</option>
+            </select>
+          </div>
+          
+          {options.mergeMode === 'grid' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                网格列数
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="10"
+                step="1"
+                value={options.columns || ''}
+                onChange={(e) => setOptions((prev: MergeOptions) => ({ ...prev, columns: parseInt(e.target.value) || undefined }))}
+                placeholder="自动计算"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 focus:border-transparent transition-shadow"
+              />
+            </div>
+          )}
         </div>
       </div>
       
       {/* 尺寸调整选项 */}
       {originalWidth > 0 && originalHeight > 0 && (
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              输出尺寸
-            </label>
-            <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-5 bg-gray-900 dark:bg-white rounded-full"></div>
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                尺寸调整
+              </h3>
+            </div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
               原始: {originalWidth} × {originalHeight} px
             </div>
           </div>
@@ -482,33 +688,14 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
       )}
 
       {/* 导出按钮 */}
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+      <div className="flex justify-center">
         <button
-          onClick={() => exportGif('grid')}
+          onClick={() => exportGif(options.mergeMode || 'grid')}
           disabled={disabled || isExporting || gifObjects.length === 0}
-          className="px-6 py-3 bg-gray-900 hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 dark:disabled:bg-gray-600 font-medium rounded-lg transition-colors flex-1 sm:flex-none"
+          className="px-8 py-3 bg-gray-900 hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 dark:disabled:bg-gray-600 font-medium rounded-lg transition-colors min-w-[200px]"
         >
-          {isExporting ? `合并中 ${progress}%` : '平面合并'}
+          {isExporting ? `导出中 ${progress}%` : '开始合并导出'}
         </button>
-        <button
-          onClick={() => exportGif('sequence')}
-          disabled={disabled || isExporting || gifObjects.length === 0}
-          className="px-6 py-3 bg-gray-900 hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 dark:disabled:bg-gray-600 font-medium rounded-lg transition-colors flex-1 sm:flex-none"
-        >
-          {isExporting ? `合并中 ${progress}%` : '连续合并'}
-        </button>
-      </div>
-      
-      {/* 模式说明 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-400">
-        <div className="text-center px-3 py-2 bg-gray-50 dark:bg-gray-900/30 rounded-lg">
-          <div className="font-medium text-gray-900 dark:text-white">平面合并</div>
-          <div className="text-xs mt-0.5">所有GIF同时显示在网格中</div>
-        </div>
-        <div className="text-center px-3 py-2 bg-gray-50 dark:bg-gray-900/30 rounded-lg">
-          <div className="font-medium text-gray-900 dark:text-white">连续合并</div>
-          <div className="text-xs mt-0.5">按顺序连续播放每个GIF</div>
-        </div>
       </div>
 
       {/* 进度条 */}
@@ -528,21 +715,24 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
       )}
 
       {/* 导出结果 */}
-      {exportedGif && (
+      {exportedGif && exportedDimensions && (
         <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
           <h3 className="text-base font-semibold mb-4 text-gray-900 dark:text-white">
-            合并结果
+            结果预览
           </h3>
           <div className="text-center space-y-4">
             <div className="inline-block bg-white dark:bg-gray-800 p-3 rounded-lg">
               <Image
                 src={exportedGif}
                 alt="合并后的GIF"
-                width={400}
-                height={300}
-                className="max-w-full max-h-80 rounded-lg"
+                width={exportedDimensions.width}
+                height={exportedDimensions.height}
+                className="rounded-lg"
                 unoptimized
               />
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              导出尺寸: {exportedDimensions.width} × {exportedDimensions.height} px
             </div>
             <button
               onClick={downloadGif}
