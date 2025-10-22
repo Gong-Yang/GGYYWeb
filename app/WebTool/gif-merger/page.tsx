@@ -10,12 +10,7 @@ export const metadata: Metadata = {
     title: 'GIF处理工具 - 专业在线GIF动画合并',
     description: '使用先进的gif.js技术，精确合并多个GIF动画，支持透明背景',
     type: 'website',
-    images: [{
-      url: '/images/gif-merger-preview.jpg',
-      width: 1200,
-      height: 630,
-      alt: 'GIF处理工具预览'
-    }]
+    images: [{ url: '/images/gif-merger-preview.jpg', width: 1200, height: 630, alt: 'GIF处理工具预览' }]
   },
   twitter: {
     card: 'summary_large_image',
@@ -36,7 +31,6 @@ export default function GifMergerPage() {
             在线合并多个GIF动画，支持透明背景和时序同步
           </p>
         </div>
-        
         <GifMergerTool />
       </div>
     </div>

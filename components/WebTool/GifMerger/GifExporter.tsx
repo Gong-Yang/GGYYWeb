@@ -6,15 +6,62 @@ import type { GifObject, MergeOptions } from './types';
 import { SizeInput } from './SizeInput';
 
 interface GifExporterProps {
+  /** 已上传的 GIF 对象列表 */
+  gifObjects: GifObject[];
+  /** 是否禁用导出功能 */
+  disabled?: boolean;
+  /** 默认背景颜色 */
+  defaultBackgroundColor?: 'transparent' | 'original';
+}
+
+/**
+ * 计算网格尺寸
+ * @param count - GIF 数量
+ * @param cols - 指定的列数（可选）
+ * @returns 网格的列数和行数
+ */
+const calculateGridDimensions = (count: number, cols?: number) => {
+  const columns = cols || Math.ceil(Math.sqrt(count));
+  const rows = Math.ceil(count / columns);
+  return { cols: columns, rows };
+};
+
+/**
+ * 计算画布尺寸
+ * @param gifObjects - GIF 对象列表
+ * @param cols - 指定的列数（可选）
+ * @returns 画布总宽度、总高度及单格大小
+ */
+const calculateCanvasSize = (gifObjects: GifObject[], cols?: number) => {
+  const { cols: columns, rows } = calculateGridDimensions(gifObjects.length, cols);
+  const maxWidth = Math.max(...gifObjects.map(g => g.width));
+  const maxHeight = Math.max(...gifObjects.map(g => g.height));
+  return {
+    width: columns * maxWidth,
+    height: rows * maxHeight,
+    maxWidth,
+    maxHeight
+  };
+};
+
+interface GifExporterProps {
   gifObjects: GifObject[];
   disabled?: boolean;
   defaultBackgroundColor?: 'transparent' | 'original';
 }
 
+/**
+ * GIF 导出组件
+ * 支持多种合并模式、自定义尺寸和背景颜色
+ */
 export function GifExporter({ gifObjects, disabled = false, defaultBackgroundColor = 'original' }: GifExporterProps) {
+  // 是否正在导出
   const [isExporting, setIsExporting] = useState(false);
+  // 导出的 GIF Blob URL
   const [exportedGif, setExportedGif] = useState<string | null>(null);
+  // 导出进度（0-100）
   const [progress, setProgress] = useState(0);
+  // 合并配置选项
   const [options, setOptions] = useState<MergeOptions>({
     backgroundColor: defaultBackgroundColor,
     frameDuration: 100,
@@ -22,64 +69,50 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
     lockAspectRatio: true,
     interpolation: 'nearest'
   });
-  
+  // 原始合成尺寸
   const [originalWidth, setOriginalWidth] = useState<number>(0);
   const [originalHeight, setOriginalHeight] = useState<number>(0);
 
-  // 当 defaultBackgroundColor 变化时，更新 options
+  // 同步默认背景颜色
   useEffect(() => {
-    setOptions(prev => ({
-      ...prev,
-      backgroundColor: defaultBackgroundColor
-    }));
+    setOptions(prev => ({ ...prev, backgroundColor: defaultBackgroundColor }));
   }, [defaultBackgroundColor]);
   
-  // 当 gifObjects 变化时，计算原始合成尺寸
+  // 计算并设置原始合成尺寸
   useEffect(() => {
     if (gifObjects.length === 0) {
       setOriginalWidth(0);
       setOriginalHeight(0);
-      setOptions(prev => ({
-        ...prev,
-        targetWidth: undefined,
-        targetHeight: undefined
-      }));
+      setOptions(prev => ({ ...prev, targetWidth: undefined, targetHeight: undefined }));
       return;
     }
     
-    // 假设默认为网格模式计算尺寸
-    const cols = options.columns || Math.ceil(Math.sqrt(gifObjects.length));
-    const rows = Math.ceil(gifObjects.length / cols);
-    const maxWidth = Math.max(...gifObjects.map(g => g.width));
-    const maxHeight = Math.max(...gifObjects.map(g => g.height));
-    const width = cols * maxWidth;
-    const height = rows * maxHeight;
-    
+    const { width, height } = calculateCanvasSize(gifObjects, options.columns);
     setOriginalWidth(width);
     setOriginalHeight(height);
     
-    // 默认设置目标尺寸为原始尺寸
     if (!options.targetWidth && !options.targetHeight) {
-      setOptions(prev => ({
-        ...prev,
-        targetWidth: width,
-        targetHeight: height
-      }));
+      setOptions(prev => ({ ...prev, targetWidth: width, targetHeight: height }));
     }
   }, [gifObjects, options.columns]);
 
-  // 动态加载gif.js（使用npm包，避免CDN失败）
+  /**
+   * 动态加载 gif.js 库
+   * @returns GIF 构造函数
+   */
   const loadGifJs = useCallback(async () => {
     try {
       const mod = await import('gif.js');
-      // UMD 导出为 default
       return (mod as unknown as { default: new (options: any) => any }).default;
     } catch {
       throw new Error('gif.js加载失败');
     }
   }, []);
 
-  // 合并GIF
+  /**
+   * 导出 GIF
+   * @param mergeMode - 合并模式（grid: 网格平面合并, sequence: 连续播放合并）
+   */
   const exportGif = useCallback(async (mergeMode: 'grid' | 'sequence') => {
     if (gifObjects.length === 0) {
       alert('请先上传GIF文件');
@@ -91,44 +124,28 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
     setProgress(0);
 
     try {
-      // 加载gif.js
       const GIF = await loadGifJs();
-      
-      console.log('开始合并', gifObjects.length, '个GIF文件');
 
       // 计算画布尺寸和帧数
-      let totalWidth: number, totalHeight: number, totalFrames: number;
-      let sourceWidth: number, sourceHeight: number; // 原始合成尺寸
+      let sourceWidth: number, sourceHeight: number, totalFrames: number;
       
+      // 根据合并模式计算尺寸
       if (mergeMode === 'grid') {
-        // 网格合并模式
-        const cols = options.columns || Math.ceil(Math.sqrt(gifObjects.length));
-        const rows = Math.ceil(gifObjects.length / cols);
-        const maxWidth = Math.max(...gifObjects.map(g => g.width));
-        const maxHeight = Math.max(...gifObjects.map(g => g.height));
-        sourceWidth = cols * maxWidth;
-        sourceHeight = rows * maxHeight;
+        const canvasSize = calculateCanvasSize(gifObjects, options.columns);
+        sourceWidth = canvasSize.width;
+        sourceHeight = canvasSize.height;
         totalFrames = Math.max(...gifObjects.map(g => g.frameCount));
       } else {
-        // 连续播放合并模式
         sourceWidth = Math.max(...gifObjects.map(g => g.width));
         sourceHeight = Math.max(...gifObjects.map(g => g.height));
         totalFrames = gifObjects.reduce((sum, g) => sum + g.frameCount, 0);
       }
       
       // 应用目标尺寸（如果设置了）
-      totalWidth = options.targetWidth || sourceWidth;
-      totalHeight = options.targetHeight || sourceHeight;
-      
-      console.log('合并参数:', { 
-        totalWidth, 
-        totalHeight, 
-        totalFrames,
-        mergeMode: mergeMode,
-        backgroundColor: options.backgroundColor
-      });
+      const totalWidth = options.targetWidth || sourceWidth;
+      const totalHeight = options.targetHeight || sourceHeight;
 
-      // 创建gif.js实例
+      // 创建 gif.js 实例
       const GifConstructor = GIF as unknown as new (options: {
         workers: number;
         quality: number;
@@ -152,78 +169,66 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
         transparent: options.backgroundColor === 'transparent' ? 0x000000 : null,
         background: options.backgroundColor === 'white' ? 0xffffff : 
                    options.backgroundColor === 'black' ? 0x000000 : null,
-        // 指定 worker 路径，Next.js 会从 /public 提供 /gif.worker.js
         workerScript: '/gif.worker.js'
       });
 
-      // 监听进度
-      gif.on('progress', (p: number) => {
-        setProgress(Math.round(p * 100));
-      });
+      
+      // 监听生成进度
+      gif.on('progress', (p: number) => setProgress(Math.round(p * 100)));
 
-      // 创建源画布（原始尺寸）
+      // 创建源画布（原始尺寸）和目标画布（缩放后尺寸）
       const sourceCanvas = document.createElement('canvas');
       sourceCanvas.width = sourceWidth;
       sourceCanvas.height = sourceHeight;
       const sourceCtx = sourceCanvas.getContext('2d');
+      if (!sourceCtx) throw new Error('无法创建源画布上下文');
       
-      if (!sourceCtx) {
-        throw new Error('无法创建源画布上下文');
-      }
-      
-      // 创建目标画布（缩放后尺寸）
       const canvas = document.createElement('canvas');
       canvas.width = totalWidth;
       canvas.height = totalHeight;
       const ctx = canvas.getContext('2d');
-      
-      if (!ctx) {
-        throw new Error('无法创建画布上下文');
-      }
+      if (!ctx) throw new Error('无法创建画布上下文');
       
       // 设置图像缩放插值方式
       ctx.imageSmoothingEnabled = options.interpolation === 'bilinear';
 
+      /**
+       * 清空画布并填充背景颜色
+       */
+      const clearCanvas = (context: CanvasRenderingContext2D, width: number, height: number) => {
+        if (options.backgroundColor === 'transparent' || options.backgroundColor === 'original') {
+          context.clearRect(0, 0, width, height);
+        } else {
+          context.fillStyle = options.backgroundColor === 'white' ? '#ffffff' : '#000000';
+          context.fillRect(0, 0, width, height);
+        }
+      };
+
+      
       // 生成所有合成帧
       for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
-        // 先在源画布上绘制
-        if (options.backgroundColor === 'transparent' || options.backgroundColor === 'original') {
-          sourceCtx.clearRect(0, 0, sourceCanvas.width, sourceCanvas.height);
-        } else if (options.backgroundColor === 'black' || options.backgroundColor === 'white') {
-          sourceCtx.fillStyle = options.backgroundColor === 'white' ? '#ffffff' : '#000000';
-          sourceCtx.fillRect(0, 0, sourceCanvas.width, sourceCanvas.height);
-        }
+        // 清空源画布
+        clearCanvas(sourceCtx, sourceCanvas.width, sourceCanvas.height);
         
         if (mergeMode === 'grid') {
-          // 网格合并模式
-          const cols = options.columns || Math.ceil(Math.sqrt(gifObjects.length));
-          const maxWidth = Math.max(...gifObjects.map(g => g.width));
-          const maxHeight = Math.max(...gifObjects.map(g => g.height));
+          const { cols } = calculateGridDimensions(gifObjects.length, options.columns);
+          const canvasSize = calculateCanvasSize(gifObjects, options.columns);
           
-          // 绘制每个GIF到对应位置
           for (let gifIndex = 0; gifIndex < gifObjects.length; gifIndex++) {
             const gifObj = gifObjects[gifIndex];
             if (!gifObj) continue;
             
             const col = gifIndex % cols;
             const row = Math.floor(gifIndex / cols);
-            const x = col * maxWidth;
-            const y = row * maxHeight;
+            const x = col * canvasSize.maxWidth;
+            const y = row * canvasSize.maxHeight;
+            const offsetX = (canvasSize.maxWidth - gifObj.width) / 2;
+            const offsetY = (canvasSize.maxHeight - gifObj.height) / 2;
             
-            // 居中绘制偏移量
-            const offsetX = (maxWidth - gifObj.width) / 2;
-            const offsetY = (maxHeight - gifObj.height) / 2;
-            
-            // 计算当前GIF在画布上的位置
-            const gifX = x + offsetX;
-            const gifY = y + offsetY;
-            
-            // 获取当前帧数据（帧数不足时定格在第一帧）
             const actualFrameIndex = frameIndex < gifObj.frameCount ? frameIndex : 0;
             const frameData = gifObj.frames[actualFrameIndex];
             
             if (frameData) {
-              // 创建临时画布绘制单个GIF帧
               const tempCanvas = document.createElement('canvas');
               tempCanvas.width = gifObj.width;
               tempCanvas.height = gifObj.height;
@@ -231,25 +236,21 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
               
               if (tempCtx) {
                 tempCtx.putImageData(frameData.imageData, 0, 0);
-                sourceCtx.drawImage(tempCanvas, gifX, gifY);
+                sourceCtx.drawImage(tempCanvas, x + offsetX, y + offsetY);
               }
             }
           }
         } else {
-          // 连续播放合并模式
           let currentFrameIndex = frameIndex;
           let selectedGifIndex = 0;
           
-          // 找到对应的GIF和帧
           for (let i = 0; i < gifObjects.length; i++) {
             const gifObj = gifObjects[i];
             if (gifObj && currentFrameIndex < gifObj.frameCount) {
               selectedGifIndex = i;
               break;
             }
-            if (gifObj) {
-              currentFrameIndex -= gifObj.frameCount;
-            }
+            if (gifObj) currentFrameIndex -= gifObj.frameCount;
           }
           
           const selectedGif = gifObjects[selectedGifIndex];
@@ -257,11 +258,9 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
             const frameData = selectedGif.frames[currentFrameIndex];
             
             if (frameData) {
-              // 居中绘制当前GIF的帧
               const offsetX = (sourceWidth - selectedGif.width) / 2;
               const offsetY = (sourceHeight - selectedGif.height) / 2;
               
-              // 创建临时画布绘制单个GIF帧
               const tempCanvas = document.createElement('canvas');
               tempCanvas.width = selectedGif.width;
               tempCanvas.height = selectedGif.height;
@@ -275,37 +274,26 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
           }
         }
         
-        // 将源画布缩放到目标画布
-        if (options.backgroundColor === 'transparent' || options.backgroundColor === 'original') {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-        } else if (options.backgroundColor === 'black' || options.backgroundColor === 'white') {
-          ctx.fillStyle = options.backgroundColor === 'white' ? '#ffffff' : '#000000';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
+        // 清空目标画布并缩放绘制
+        clearCanvas(ctx, canvas.width, canvas.height);
         ctx.drawImage(sourceCanvas, 0, 0, totalWidth, totalHeight);
         
-        // 添加帧到GIF
-        gif.addFrame(ctx, {
-          copy: true,
-          delay: options.frameDuration
-        });
-        
-        // 更新进度（生成帧阶段）
-        const frameProgress = (frameIndex + 1) / totalFrames * 50; // 50%用于帧生成
-        setProgress(Math.round(frameProgress));
+        // 添加到 GIF 帧序列
+        gif.addFrame(ctx, { copy: true, delay: options.frameDuration });
+        // 更新进度（帧生成阶段占 50%）
+        setProgress(Math.round((frameIndex + 1) / totalFrames * 50));
       }
 
-      console.log(`所有${totalFrames}帧已添加，开始渲染GIF`);
-
-      // 渲染GIF
+      // 监听渲染完成事件
       gif.on('finished', (blob: Blob) => {
         const url = URL.createObjectURL(blob);
         setExportedGif(url);
         setIsExporting(false);
         setProgress(100);
-        console.log('GIF渲染完成');
       });
 
+      
+      // 开始渲染 GIF
       gif.render();
 
     } catch (error) {
@@ -316,6 +304,9 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
     }
   }, [gifObjects, options, loadGifJs]);
 
+  /**
+   * 下载生成的 GIF
+   */
   const downloadGif = useCallback(() => {
     if (exportedGif) {
       const link = document.createElement('a');
@@ -325,37 +316,38 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
     }
   }, [exportedGif]);
   
-  // 处理宽度变化
+  
+  /**
+   * 处理宽度变化（如锁定宽高比，同步调整高度）
+   */
   const handleWidthChange = useCallback((value: number) => {
     setOptions(prev => {
       const newOptions = { ...prev, targetWidth: value };
-      
       if (prev.lockAspectRatio && originalWidth > 0 && originalHeight > 0) {
-        // 按比例调整高度
-        const aspectRatio = originalHeight / originalWidth;
-        newOptions.targetHeight = Math.round(value * aspectRatio);
+        newOptions.targetHeight = Math.round(value * (originalHeight / originalWidth));
       }
-      
       return newOptions;
     });
   }, [originalWidth, originalHeight]);
   
-  // 处理高度变化
+  
+  /**
+   * 处理高度变化（如锁定宽高比，同步调整宽度）
+   */
   const handleHeightChange = useCallback((value: number) => {
     setOptions(prev => {
       const newOptions = { ...prev, targetHeight: value };
-      
       if (prev.lockAspectRatio && originalWidth > 0 && originalHeight > 0) {
-        // 按比例调整宽度
-        const aspectRatio = originalWidth / originalHeight;
-        newOptions.targetWidth = Math.round(value * aspectRatio);
+        newOptions.targetWidth = Math.round(value * (originalWidth / originalHeight));
       }
-      
       return newOptions;
     });
   }, [originalWidth, originalHeight]);
   
-  // 切换锁定状态
+  
+  /**
+   * 切换宽高比锁定状态
+   */
   const toggleLockAspectRatio = useCallback(() => {
     setOptions(prev => ({ ...prev, lockAspectRatio: !prev.lockAspectRatio }));
   }, []);

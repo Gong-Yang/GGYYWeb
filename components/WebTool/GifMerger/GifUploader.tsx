@@ -7,22 +7,31 @@ import { useDropzone } from 'react-dropzone';
 import type { GifFrame, GifObject } from './types';
 
 interface GifUploaderProps {
+  /** 文件添加成功后的回调函数 */
   onFilesAdded: (gifObjects: GifObject[]) => void;
+  /** 最大文件数量限制 */
   maxFiles?: number;
 }
 
+/**
+ * GIF 文件上传组件
+ * 支持拖拽上传和点击选择，自动解析 GIF 文件并提取帧数据
+ */
 export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
+  // 是否正在处理文件
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // 解析GIF文件
+  /**
+   * 解析单个 GIF 文件
+   * @param file - GIF 文件对象
+   * @returns 解析后的 GIF 对象，解析失败返回 null
+   */
   const parseGifFile = useCallback(async (file: File): Promise<GifObject | null> => {
     try {
       console.log('开始解析GIF:', file.name);
       
-      // 读取文件为ArrayBuffer
+      // 读取文件并解析 GIF 结构
       const arrayBuffer = await file.arrayBuffer();
-      
-      // 使用gifuct-js解析GIF
       const gif = parseGIF(arrayBuffer);
       const frames = decompressFrames(gif, true);
       
@@ -52,36 +61,23 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
       // 处理每一帧
       for (let i = 0; i < frames.length; i++) {
         const frame = frames[i];
-        if (!frame) {
-          console.warn(`帧${i}为空，跳过`);
-          continue;
-        }
+        if (!frame) continue;
         
-        console.log(`处理帧${i}:`, {
-          dims: frame.dims,
-          disposalType: frame.disposalType,
-          delay: frame.delay,
-          hasPatch: !!frame.patch
-        });
-        
-        // 根据上一帧的disposal方法处理画布
+        // 根据上一帧的处置方法处理画布
         if (i > 0) {
           const prevFrame = frames[i - 1];
-          
           if (prevFrame) {
-            if (prevFrame.disposalType === 2) {
-              // Disposal Type 2: 恢复到背景色（清除上一帧区域）
-              if (prevFrame.dims) {
-                ctx.clearRect(
-                  prevFrame.dims.left,
-                  prevFrame.dims.top,
-                  prevFrame.dims.width,
-                  prevFrame.dims.height
-                );
-              }
-            } else if (prevFrame.disposalType === 3) {
-              // Disposal Type 3: 恢复到渲染前的状态
-              // 查找上上一帧（i-2）的数据进行恢复
+            // Disposal Type 2: 恢复到背景色（清除上一帧区域）
+            if (prevFrame.disposalType === 2 && prevFrame.dims) {
+              ctx.clearRect(
+                prevFrame.dims.left,
+                prevFrame.dims.top,
+                prevFrame.dims.width,
+                prevFrame.dims.height
+              );
+            } 
+            // Disposal Type 3: 恢复到渲染前的状态
+            else if (prevFrame.disposalType === 3) {
               const restoreFrame = processedFrames[i - 2];
               if (restoreFrame) {
                 ctx.putImageData(restoreFrame.imageData, 0, 0);
@@ -89,36 +85,29 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
               }
             }
-            // Disposal Type 0/1: 不处理，保留当前画布内容（累积渲染）
-            // 这是关键：什么都不做，让新帧叠加在旧帧上
+            // Disposal Type 0/1: 保留当前画布内容（累积渲染）
           }
         }
 
-        // 绘制当前帧的patch数据到画布上（累积渲染）
+        // 绘制当前帧的图像数据
         if (frame.patch && frame.dims) {
           const { width, height, left, top } = frame.dims;
-          
-          // 创建临时canvas来处理patch数据
+          // 使用临时画布处理 patch 数据
           const tempCanvas = document.createElement('canvas');
           tempCanvas.width = width;
           tempCanvas.height = height;
           const tempCtx = tempCanvas.getContext('2d');
           
           if (tempCtx) {
-            // 将patch数据绘制到临时canvas
             const tempImageData = new ImageData(width, height);
             tempImageData.data.set(frame.patch);
             tempCtx.putImageData(tempImageData, 0, 0);
-            
-            // 使用drawImage将临时canvas绘制到主canvas上
-            // drawImage会正确处理透明度混合，而不是像putImageData那样直接替换
+            // 使用 drawImage 正确处理透明度混合
             ctx.drawImage(tempCanvas, left, top);
           }
-        } else {
-          console.warn(`帧${i}缺少patch或dims数据`);
         }
 
-        // 获取完整帧数据（深拷贝，避免引用问题）
+        // 获取完整帧数据（深拷贝避免引用问题）
         const fullFrameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const copiedImageData = new ImageData(
           new Uint8ClampedArray(fullFrameData.data),
@@ -126,12 +115,11 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
           fullFrameData.height
         );
         
-        // 检查当前帧是否包含透明像素（alpha < 255）
+        // 检查是否包含透明像素（alpha < 255）
         if (!hasTransparency) {
           for (let i = 3; i < fullFrameData.data.length; i += 4) {
             if (fullFrameData.data[i] !== undefined && fullFrameData.data[i]! < 255) {
               hasTransparency = true;
-              console.log(`检测到透明像素，帧${i}，alpha=${fullFrameData.data[i]}`);
               break;
             }
           }
@@ -139,17 +127,16 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
         
         processedFrames.push({
           imageData: copiedImageData,
-          delay: Math.max(frame.delay || 100, 50), // 最小50ms延迟
+          delay: Math.max(frame.delay || 100, 50), // 最小延迟 50ms
           disposal: frame.disposalType || 0
         });
       }
 
+      // 计算总时长并创建预览 URL
       const totalDuration = processedFrames.reduce((sum, frame) => sum + frame.delay, 0);
       const url = URL.createObjectURL(file);
 
-      console.log(`GIF透明度检测结果: ${hasTransparency ? '包含透明背景' : '不包含透明背景'}`);
-
-      const gifObject: GifObject = {
+      return {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         file,
         url,
@@ -158,25 +145,19 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
         frames: processedFrames,
         totalDuration,
         frameCount: processedFrames.length,
-        hasTransparency: hasTransparency
+        hasTransparency
       };
-
-      console.log('GIF解析完成:', {
-        fileName: file.name,
-        dimensions: `${gif.lsd.width}x${gif.lsd.height}`,
-        frameCount: processedFrames.length,
-        totalDuration: totalDuration + 'ms',
-        hasTransparency: hasTransparency
-      });
-
-      return gifObject;
     } catch (error) {
       console.error('解析GIF文件失败:', error);
       return null;
     }
   }, []);
 
+  /**
+   * 文件拖放回调
+   */
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    // 过滤出有效的 GIF 文件（最大 50MB）
     const gifFiles = acceptedFiles.filter(file => 
       file.type === 'image/gif' && file.size <= 50 * 1024 * 1024
     );
@@ -196,6 +177,7 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
     try {
       const gifObjects: GifObject[] = [];
       
+      // 逐个解析文件
       for (const file of gifFiles) {
         const gifObject = await parseGifFile(file);
         if (gifObject) {

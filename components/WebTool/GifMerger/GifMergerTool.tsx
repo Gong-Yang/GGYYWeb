@@ -6,124 +6,131 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { FramePreview } from './FramePreview';
 import { GifExporter } from './GifExporter';
 import { GifUploader } from './GifUploader';
-import type { GifObject } from './types';
+import type { GifFrame, GifObject } from './types';
 
+/**
+ * 格式化文件大小
+ * @param bytes - 字节数
+ * @returns 格式化后的字符串（如 "1.5 MB"）
+ */
+const formatSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+/**
+ * 格式化时间
+ * @param ms - 毫秒数
+ * @returns 格式化后的字符串（如 "2.5s"）
+ */
+const formatTime = (ms: number): string => {
+  return (ms / 1000).toFixed(1) + 's';
+};
+
+/**
+ * GIF 合并工具主组件
+ * 负责协调文件上传、预览和导出功能
+ */
 export function GifMergerTool() {
   const [gifObjects, setGifObjects] = useState<GifObject[]>([]);
   const [showFrameDebug, setShowFrameDebug] = useState<boolean>(false);
+  // 当前拖拽的 GIF 索引
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  // 默认背景颜色（根据透明度自动设置）
   const [defaultBackgroundColor, setDefaultBackgroundColor] = useState<'transparent' | 'original'>('original');
 
-  // 监听 gifObjects 变化，自动设置背景颜色默认值
+  // 自动检测透明度并设置默认背景颜色
   useEffect(() => {
     if (gifObjects.length > 0) {
-      // 检查是否任一GIF包含透明背景
+      // 如果任一 GIF 包含透明背景，默认使用透明背景
       const anyHasTransparency = gifObjects.some(gif => gif.hasTransparency);
-      
-      if (anyHasTransparency) {
-        // 如果任一GIF包含透明背景，默认设置为透明
-        setDefaultBackgroundColor('transparent');
-        console.log('检测到透明背景GIF，自动设置背景为透明');
-      } else {
-        // 否则默认设置为原图背景
-        setDefaultBackgroundColor('original');
-        console.log('未检测到透明背景，自动设置背景为原图');
-      }
+      setDefaultBackgroundColor(anyHasTransparency ? 'transparent' : 'original');
     }
   }, [gifObjects]);
 
-  // 处理文件添加
+  /**
+   * 添加新上传的 GIF 文件
+   */
   const handleFilesAdded = useCallback((newGifObjects: GifObject[]) => {
     setGifObjects(prev => [...prev, ...newGifObjects]);
   }, []);
 
-  // 移除GIF文件
+  /**
+   * 移除指定的 GIF 文件
+   * @param id - GIF 对象的 ID
+   */
   const handleRemoveGif = useCallback((id: string) => {
     setGifObjects(prev => {
-      const updated = prev.filter(gif => gif.id !== id);
-      // 清理URL对象
       const removed = prev.find(gif => gif.id === id);
-      if (removed) {
-        URL.revokeObjectURL(removed.url);
-      }
-      return updated;
+      if (removed) URL.revokeObjectURL(removed.url); // 释放内存
+      return prev.filter(gif => gif.id !== id);
     });
   }, []);
 
-  // 清空所有文件
+  /**
+   * 清空所有已上传的 GIF
+   */
   const handleClearAll = useCallback(() => {
-    gifObjects.forEach(gif => {
-      URL.revokeObjectURL(gif.url);
-    });
+    gifObjects.forEach(gif => URL.revokeObjectURL(gif.url)); // 释放所有 URL
     setGifObjects([]);
   }, [gifObjects]);
 
-  // 处理拖拽开始
+  /**
+   * 拖拽开始事件
+   */
   const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', (e.currentTarget as HTMLElement).outerHTML);
     (e.currentTarget as HTMLElement).style.opacity = '0.5';
   }, []);
 
-  // 处理拖拽结束
+  /**
+   * 拖拽结束事件
+   */
   const handleDragEnd = useCallback((e: React.DragEvent) => {
     (e.currentTarget as HTMLElement).style.opacity = '1';
     setDraggedIndex(null);
   }, []);
 
-  // 处理拖拽悬停
+  /**
+   * 拖拽悬停事件
+   */
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
   }, []);
 
-  // 处理拖拽进入
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-  }, []);
-
-  // 处理拖拽放下
+  /**
+   * 拖拽放下事件 - 调整 GIF 顺序
+   */
   const handleDrop = useCallback((e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
-    
-    if (draggedIndex === null || draggedIndex === dropIndex) {
-      return;
-    }
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
 
     setGifObjects(prev => {
       const newGifObjects = [...prev];
       const draggedItem = newGifObjects[draggedIndex];
+      if (!draggedItem) return prev;
       
-      if (!draggedItem) {
-        return prev;
-      }
-      
-      // 移除被拖拽的项目
+      // 移除拖拽的项，并插入到目标位置
       newGifObjects.splice(draggedIndex, 1);
-      
-      // 插入到目标位置（无论从哪个方向拖拽，都直接使用dropIndex）
       newGifObjects.splice(dropIndex, 0, draggedItem);
-      
       return newGifObjects;
     });
   }, [draggedIndex]);
 
   // 计算统计信息
-  const totalFrames = Math.max(...gifObjects.map(gif => gif.frameCount), 0);
-  const totalSize = gifObjects.reduce((sum, gif) => sum + gif.file.size, 0);
-  const longestDuration = Math.max(...gifObjects.map(gif => gif.totalDuration), 0);
-  
-  const formatSize = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const formatTime = (ms: number) => {
-    return (ms / 1000).toFixed(1) + 's';
+  const stats = {
+    totalFrames: Math.max(...gifObjects.map(gif => gif.frameCount), 0),
+    totalSize: gifObjects.reduce((sum, gif) => sum + gif.file.size, 0),
+    longestDuration: Math.max(...gifObjects.map(gif => gif.totalDuration), 0),
+    gridLayout: {
+      cols: Math.ceil(Math.sqrt(gifObjects.length)),
+      rows: Math.ceil(gifObjects.length / Math.ceil(Math.sqrt(gifObjects.length)))
+    }
   };
 
   return (
@@ -163,38 +170,19 @@ export function GifMergerTool() {
               </div>
             </div>
 
-            {/* 文件统计信息 */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <div className="text-center">
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {gifObjects.length}
+              {[
+                { label: '文件数量', value: gifObjects.length },
+                { label: '最大帧数', value: stats.totalFrames },
+                { label: '最长时长', value: formatTime(stats.longestDuration) },
+                { label: '总大小', value: formatSize(stats.totalSize) },
+                { label: '网格布局', value: `${stats.gridLayout.cols} × ${stats.gridLayout.rows}` }
+              ].map(({ label, value }) => (
+                <div key={label} className="text-center">
+                  <div className="text-lg font-semibold text-gray-900 dark:text-white">{value}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{label}</div>
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">文件数量</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {totalFrames}
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">最大帧数</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {formatTime(longestDuration)}
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">最长时长</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {formatSize(totalSize)}
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">总大小</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {Math.ceil(Math.sqrt(gifObjects.length))} × {Math.ceil(gifObjects.length / Math.ceil(Math.sqrt(gifObjects.length)))}
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">网格布局</div>
-              </div>
+              ))}
             </div>
 
             {/* 文件列表 */}
@@ -209,7 +197,6 @@ export function GifMergerTool() {
                       onDragStart={(e) => handleDragStart(e, index)}
                       onDragEnd={handleDragEnd}
                       onDragOver={handleDragOver}
-                      onDragEnter={handleDragEnter}
                       onDrop={(e) => handleDrop(e, index)}
                       title="拖拽可调整文件顺序"
                   >
@@ -261,14 +248,13 @@ export function GifMergerTool() {
                       </button>
                     </div>
 
-                    {/* 帧调试显示 */}
-                    {showFrameDebug && gif.frames && gif.frames.length > 0 && (
+                    {showFrameDebug && gif.frames.length > 0 && (
                         <div>
                           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                             帧调试显示 ({gif.frames.length} 帧)
                           </h4>
                           <div className="grid grid-cols-8 gap-3 max-h-96 overflow-y-auto p-2 bg-white dark:bg-gray-800 rounded border">
-                            {gif.frames.map((frame: import('./types').GifFrame, frameIndex: number) => (
+                            {gif.frames.map((frame: GifFrame, frameIndex: number) => (
                                 <FramePreview
                                     key={frameIndex}
                                     frame={frame}
