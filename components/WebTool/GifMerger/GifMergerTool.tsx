@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { FramePreview } from './FramePreview';
 import { GifExporter } from './GifExporter';
-import { GifUploader } from './GifUploader';
+import { GifUploader } from '../general/GifUploader';
 import type { GifFrame, GifObject } from './types';
 
 /**

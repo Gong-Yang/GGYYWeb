@@ -4,7 +4,7 @@ import { decompressFrames, parseGIF } from 'gifuct-js';
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import type { GifFrame, GifObject } from './types';
+import type { GifFrame, GifObject } from '../GifMerger/types';
 
 interface GifUploaderProps {
   /** 文件添加成功后的回调函数 */
@@ -213,23 +213,23 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
       <div
         {...getRootProps()}
         className={`
-          border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all
+          border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all
           ${isProcessing 
             ? 'border-gray-300 bg-gray-50 dark:bg-gray-900/30 cursor-not-allowed'
             : isDragActive 
-              ? 'border-gray-900 bg-gray-100 dark:border-white dark:bg-gray-900/50 scale-[1.01]' 
-              : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900/20'
+              ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/20 scale-[1.02] shadow-xl' 
+              : 'border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-900/20 hover:shadow-lg'
           }
         `}
       >
         <input {...getInputProps()} />
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex justify-center">
             {isProcessing ? (
-              <div className="animate-spin rounded-full h-14 w-14 border-b-2 border-gray-900 dark:border-white"></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-3 border-blue-500 dark:border-blue-400"></div>
             ) : (
               <svg
-                className="w-14 h-14 text-gray-400 dark:text-gray-600"
+                className="w-16 h-16 text-gray-400 dark:text-gray-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -244,7 +244,7 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
             )}
           </div>
           <div>
-            <p className="text-base font-medium text-gray-900 dark:text-white">
+            <p className="text-lg font-medium text-gray-900 dark:text-white leading-relaxed">
               {isProcessing 
                 ? '正在解析GIF文件...' 
                 : isDragActive 
@@ -252,7 +252,7 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
                   : '拖拽GIF文件到此处，或点击上传'
               }
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            <p className="text-base text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">
               支持多选，最多{maxFiles}个文件，单个文件最大50MB
             </p>
           </div>
