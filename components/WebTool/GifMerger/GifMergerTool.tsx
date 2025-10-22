@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { FramePreview } from './FramePreview';
 import { GifExporter } from './GifExporter';
@@ -12,6 +12,25 @@ export function GifMergerTool() {
   const [gifObjects, setGifObjects] = useState<GifObject[]>([]);
   const [showFrameDebug, setShowFrameDebug] = useState<boolean>(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [defaultBackgroundColor, setDefaultBackgroundColor] = useState<'transparent' | 'original'>('original');
+
+  // 监听 gifObjects 变化，自动设置背景颜色默认值
+  useEffect(() => {
+    if (gifObjects.length > 0) {
+      // 检查是否任一GIF包含透明背景
+      const anyHasTransparency = gifObjects.some(gif => gif.hasTransparency);
+      
+      if (anyHasTransparency) {
+        // 如果任一GIF包含透明背景，默认设置为透明
+        setDefaultBackgroundColor('transparent');
+        console.log('检测到透明背景GIF，自动设置背景为透明');
+      } else {
+        // 否则默认设置为原图背景
+        setDefaultBackgroundColor('original');
+        console.log('未检测到透明背景，自动设置背景为原图');
+      }
+    }
+  }, [gifObjects]);
 
   // 处理文件添加
   const handleFilesAdded = useCallback((newGifObjects: GifObject[]) => {
@@ -83,9 +102,8 @@ export function GifMergerTool() {
       // 移除被拖拽的项目
       newGifObjects.splice(draggedIndex, 1);
       
-      // 在新位置插入项目
-      const insertIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
-      newGifObjects.splice(insertIndex, 0, draggedItem);
+      // 插入到目标位置（无论从哪个方向拖拽，都直接使用dropIndex）
+      newGifObjects.splice(dropIndex, 0, draggedItem);
       
       return newGifObjects;
     });
@@ -276,7 +294,7 @@ export function GifMergerTool() {
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             合并导出
           </h2>
-          <GifExporter gifObjects={gifObjects} />
+          <GifExporter gifObjects={gifObjects} defaultBackgroundColor={defaultBackgroundColor} />
         </div>
       )}
 

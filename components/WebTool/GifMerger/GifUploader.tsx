@@ -47,6 +47,7 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const processedFrames: GifFrame[] = [];
+      let hasTransparency = false; // 标记是否包含透明像素
       
       // 处理每一帧
       for (let i = 0; i < frames.length; i++) {
@@ -125,6 +126,17 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
           fullFrameData.height
         );
         
+        // 检查当前帧是否包含透明像素（alpha < 255）
+        if (!hasTransparency) {
+          for (let i = 3; i < fullFrameData.data.length; i += 4) {
+            if (fullFrameData.data[i] !== undefined && fullFrameData.data[i]! < 255) {
+              hasTransparency = true;
+              console.log(`检测到透明像素，帧${i}，alpha=${fullFrameData.data[i]}`);
+              break;
+            }
+          }
+        }
+        
         processedFrames.push({
           imageData: copiedImageData,
           delay: Math.max(frame.delay || 100, 50), // 最小50ms延迟
@@ -135,6 +147,8 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
       const totalDuration = processedFrames.reduce((sum, frame) => sum + frame.delay, 0);
       const url = URL.createObjectURL(file);
 
+      console.log(`GIF透明度检测结果: ${hasTransparency ? '包含透明背景' : '不包含透明背景'}`);
+
       const gifObject: GifObject = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         file,
@@ -143,14 +157,16 @@ export function GifUploader({ onFilesAdded, maxFiles = 10 }: GifUploaderProps) {
         height: gif.lsd.height,
         frames: processedFrames,
         totalDuration,
-        frameCount: processedFrames.length
+        frameCount: processedFrames.length,
+        hasTransparency: hasTransparency
       };
 
       console.log('GIF解析完成:', {
         fileName: file.name,
         dimensions: `${gif.lsd.width}x${gif.lsd.height}`,
         frameCount: processedFrames.length,
-        totalDuration: totalDuration + 'ms'
+        totalDuration: totalDuration + 'ms',
+        hasTransparency: hasTransparency
       });
 
       return gifObject;

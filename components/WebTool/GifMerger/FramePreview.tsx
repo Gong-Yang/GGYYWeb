@@ -51,6 +51,7 @@ export function FramePreview({ frame, frameIndex, gifWidth, gifHeight }: FramePr
       />
       <span className="text-[10px] text-gray-500 dark:text-gray-400">帧{frameIndex}</span>
       <span className="text-[10px] text-gray-400 dark:text-gray-500">{frame.delay}ms</span>
+      <span className="text-[10px] text-gray-400 dark:text-gray-500">disposal: {frame.disposal}</span>
     </div>
   );
 }

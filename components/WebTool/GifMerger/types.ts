@@ -13,6 +13,7 @@ export interface GifObject {
   frames: GifFrame[]; // 解析后的帧数据
   totalDuration: number; // 总播放时间（毫秒）
   frameCount: number; // 总帧数
+  hasTransparency: boolean; // 是否包含透明背景
 }
 
 export interface MergeOptions {

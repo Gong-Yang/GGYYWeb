@@ -1,23 +1,32 @@
 'use client';
 
 import Image from 'next/image';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import type { GifObject, MergeOptions } from './types';
 
 interface GifExporterProps {
   gifObjects: GifObject[];
   disabled?: boolean;
+  defaultBackgroundColor?: 'transparent' | 'original';
 }
 
-export function GifExporter({ gifObjects, disabled = false }: GifExporterProps) {
+export function GifExporter({ gifObjects, disabled = false, defaultBackgroundColor = 'original' }: GifExporterProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [exportedGif, setExportedGif] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [options, setOptions] = useState<MergeOptions>({
-    backgroundColor: 'original',
+    backgroundColor: defaultBackgroundColor,
     frameDuration: 100,
     mergeMode: 'grid'
   });
+
+  // 当 defaultBackgroundColor 变化时，更新 options
+  useEffect(() => {
+    setOptions(prev => ({
+      ...prev,
+      backgroundColor: defaultBackgroundColor
+    }));
+  }, [defaultBackgroundColor]);
 
   // 动态加载gif.js（使用npm包，避免CDN失败）
   const loadGifJs = useCallback(async () => {
