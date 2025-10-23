@@ -2,7 +2,7 @@
 
 import GIF from 'gif.js';
 import Image from 'next/image';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Button } from '@/components/general/Button/Button';
 
@@ -27,17 +27,32 @@ export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: Wa
   const [processedGifs, setProcessedGifs] = useState<ProcessedGif[]>([]);
   const [selectedProcessedIds, setSelectedProcessedIds] = useState<string[]>([]);
 
+   // 在组件接收props时就创建修改后的水印数组
+  const processedWatermarks = useMemo(() => {
+    return watermarks.map(w => {
+      // 检查是否有黑色文字水印, 如果有，将纯黑色 #000000 微调为 #020202
+      if (w.type === 'text' && w.color.toLowerCase() === '#000000') {
+        return { ...w, color: '#020202' }; // 创建新对象并修改颜色
+      }
+      return { ...w };
+    });
+  }, [watermarks]);
+
   const applyWatermarksToGif = useCallback(async (gifObject: GifObject): Promise<Blob> => {
     return new Promise((resolve, reject) => {
       try {
-        const gif = new GIF({
+
+        // GIF配置：如果GIF有透明背景，使用特殊处理
+        const gifConfig: any = {
           workers: 2,
           quality: 10,
           width: gifObject.width,
           height: gifObject.height,
           workerScript: '/gif.worker.js',
-          transparent: 0x00000000  // 保持透明背景
-        });
+          transparent: gifObject.hasTransparency ? 'rgba(0,0,0,0)' : null  // 当GIF有透明背景时，才使用透明色
+        };
+        
+        const gif = new GIF(gifConfig);
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -46,7 +61,8 @@ export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: Wa
         canvas.width = gifObject.width;
         canvas.height = gifObject.height;
 
-        const imageWatermarkPromises = watermarks
+        // 预加载图片水印
+        const imageWatermarkPromises = processedWatermarks
           .filter(w => w.type === 'image')
           .map(w => {
             const img = document.createElement('img');
@@ -63,7 +79,7 @@ export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: Wa
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // 渲染below层级的水印
-            watermarks
+            processedWatermarks
               .filter(w => w.layer === 'below')
               .forEach(w => renderWatermarkToCanvas(ctx, w));
 
@@ -71,11 +87,16 @@ export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: Wa
             ctx.putImageData(frame.imageData, 0, 0);
 
             // 渲染above层级的水印
-            watermarks
+            processedWatermarks
               .filter(w => w.layer === 'above')
               .forEach(w => renderWatermarkToCanvas(ctx, w));
 
-            gif.addFrame(ctx, { delay: frame.delay, copy: true, transparent: true });
+            // 根据配置决定是否启用帧透明
+            const frameOptions: any = { delay: frame.delay, copy: true };
+            if (gifObject.hasTransparency) {
+              frameOptions.transparent = true;
+            }
+            gif.addFrame(ctx, frameOptions);
           });
 
           gif.on('finished', (blob: Blob) => {
@@ -92,7 +113,7 @@ export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: Wa
         reject(error);
       }
     });
-  }, [watermarks]);
+  }, [processedWatermarks]);
 
   const renderWatermarkToCanvas = (ctx: CanvasRenderingContext2D, watermark: Watermark) => {
     ctx.save();
@@ -106,19 +127,24 @@ export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: Wa
       ctx.rotate((watermark.rotation * Math.PI) / 180);
       ctx.drawImage(img, -watermark.width / 2, -watermark.height / 2, watermark.width, watermark.height);
     } else {
-      ctx.translate(watermark.position.x, watermark.position.y);
+      // 文字水印
+      const metrics = ctx.measureText(watermark.text);
+      const textWidth = metrics.width;
+      const textHeight = watermark.fontSize;
+      
+      ctx.translate(watermark.position.x + textWidth / 2, watermark.position.y + textHeight / 2);
       ctx.rotate((watermark.rotation * Math.PI) / 180);
       ctx.font = `${watermark.fontStyle} ${watermark.fontWeight} ${watermark.fontSize}px ${watermark.fontFamily}`;
       ctx.fillStyle = watermark.color;
       ctx.textBaseline = 'top';
-      ctx.fillText(watermark.text, 0, 0);
+      ctx.fillText(watermark.text, -textWidth / 2, -textHeight / 2);
     }
 
     ctx.restore();
   };
 
   const handleExport = useCallback(async () => {
-    if (watermarks.length === 0) {
+    if (processedWatermarks.length === 0) {
       alert('请先添加水印');
       return;
     }
@@ -145,7 +171,7 @@ export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: Wa
         if (!gifObject) continue;
 
         setProgress(((i + 1) / gifsToProcess.length) * 100);
-
+        console.log('正在处理GIF:',gifObject, gifObject.file.name);
         const blob = await applyWatermarksToGif(gifObject);
         const url = URL.createObjectURL(blob);
 
@@ -165,7 +191,7 @@ export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: Wa
     } finally {
       setIsProcessing(false);
     }
-  }, [gifObjects, watermarks, selectedGifIds, applyWatermarksToGif]);
+  }, [gifObjects, processedWatermarks, selectedGifIds, applyWatermarksToGif]);
 
   const toggleProcessedSelection = useCallback((id: string) => {
     setSelectedProcessedIds(prev =>
@@ -210,7 +236,7 @@ export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: Wa
           size="lg"
           fullWidth
           onClick={handleExport}
-          disabled={isProcessing || watermarks.length === 0}
+          disabled={isProcessing || processedWatermarks.length === 0}
           style={{ transition: 'transform 0.2s' }}
           onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
           onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}

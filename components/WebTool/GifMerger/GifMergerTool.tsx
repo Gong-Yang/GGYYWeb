@@ -284,22 +284,7 @@ export function GifMergerTool() {
         </div>
       )}
 
-      {/* 空状态提示 */}
-      {gifObjects.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2C7 1.44772 7.44772 1 8 1H16C16.5523 1 17 1.44772 17 2V4H20C20.5523 4 21 4.44772 21 5C21 5.55228 20.5523 6 20 6H19V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V6H4C3.44772 6 3 5.55228 3 5C3 4.44772 3.44772 4 4 4H7ZM9 3V4H15V3H9ZM7 6V20H17V6H7ZM9 8V18H11V8H9ZM13 8V18H15V8H13Z" />
-            </svg>
-          </div>
-          <p className="text-lg text-gray-500 dark:text-gray-400">
-            还没有上传任何GIF文件
-          </p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-            请上传多个GIF文件开始合并
-          </p>
-        </div>
-      )}
+      
     </div>
   );
 }

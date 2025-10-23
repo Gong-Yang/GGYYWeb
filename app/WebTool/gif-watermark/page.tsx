@@ -16,7 +16,7 @@ export default function GifWatermarkPage() {
   const [gifObjects, setGifObjects] = useState<GifObject[]>([]);
   const [watermarks, setWatermarks] = useState<Watermark[]>([]);
   const [selectedWatermarkId, setSelectedWatermarkId] = useState<string | null>(null);
-  const [currentGifIndex, setCurrentGifIndex] = useState(0);
+  const [currentGifIndex, setCurrentGifIndex] = useState<number>(0);
   // 保存每个水印的初始位置
   const [watermarkInitialPositions, setWatermarkInitialPositions] = useState<Record<string, { x: number; y: number }>>({});
 
@@ -31,14 +31,14 @@ export default function GifWatermarkPage() {
   // 删除GIF文件
   const handleDeleteGif = useCallback((gifId: string) => {
     setGifObjects(prev => {
-      const newGifs = prev.filter(g => g.id !== gifId);
-      // 如果删除的是当前显示的GIF，需要调整索引
       const deletedIndex = prev.findIndex(g => g.id === gifId);
-      if (deletedIndex === currentGifIndex) {
-        setCurrentGifIndex(Math.max(0, currentGifIndex - 1));
-      } else if (deletedIndex < currentGifIndex) {
+      const newGifs = prev.filter(g => g.id !== gifId);
+      
+      // 调整当前索引
+      if (deletedIndex <= currentGifIndex && currentGifIndex > 0) {
         setCurrentGifIndex(currentGifIndex - 1);
       }
+      
       return newGifs;
     });
   }, [currentGifIndex]);
@@ -47,13 +47,11 @@ export default function GifWatermarkPage() {
   const handleWatermarksAdded = useCallback((newWatermarks: ImageWatermark[]) => {
     setWatermarks(prev => [...prev, ...newWatermarks]);
     // 保存初始位置
-    setWatermarkInitialPositions(prev => {
-      const newPositions = { ...prev };
-      newWatermarks.forEach(w => {
-        newPositions[w.id] = { x: w.position.x, y: w.position.y };
-      });
-      return newPositions;
+    const newPositions: Record<string, { x: number; y: number }> = {};
+    newWatermarks.forEach(w => {
+      newPositions[w.id] = { x: w.position.x, y: w.position.y };
     });
+    setWatermarkInitialPositions(prev => ({ ...prev, ...newPositions }));
   }, []);
 
   // 添加文字水印
@@ -94,9 +92,8 @@ export default function GifWatermarkPage() {
     setSelectedWatermarkId(prev => (prev === id ? null : prev));
     // 删除初始位置记录
     setWatermarkInitialPositions(prev => {
-      const newPositions = { ...prev };
-      delete newPositions[id];
-      return newPositions;
+      const { [id]: _, ...rest } = prev;
+      return rest;
     });
   }, []);
 
@@ -104,54 +101,30 @@ export default function GifWatermarkPage() {
   const selectedWatermark = watermarks.find(w => w.id === selectedWatermarkId);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+    <div className=" bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
       <div className="max-w-[1300px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {/* 未上传GIF时显示工具介绍 */}
-        {gifObjects.length === 0 ? (
-          <div className="space-y-16">
-            {/* 大标题和功能描述 */}
-            <div className="text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-black dark:text-white mb-6">
-                GIF水印工具
-              </h1>
-              <p className="text-lg leading-relaxed text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                轻松为您的GIF动图添加图片水印或文字水印,支持自由调整位置、大小、旋转角度和透明度
-              </p>
-            </div>
-            
-            {/* 上传GIF模块 */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-100 dark:border-gray-700 hover:shadow-2xl transition-shadow duration-300">
-              <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">
-                选择GIF文件
-              </h2>
-              <GifUploader onFilesAdded={handleGifsAdded} />
-            </div>
-
-            {/* 空状态提示 */}
-            <div className="text-center py-20">
-              <div className="text-gray-300 dark:text-gray-600 mb-6">
-                <svg className="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 4V2C7 1.44772 7.44772 1 8 1H16C16.5523 1 17 1.44772 17 2V4H20C20.5523 4 21 4.44772 21 5C21 5.55228 20.5523 6 20 6H19V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V6H4C3.44772 6 3 5.55228 3 5C3 4.44772 3.44772 4 4 4H7ZM9 3V4H15V3H9ZM7 6V20H17V6H7ZM9 8V18H11V8H9ZM13 8V18H15V8H13Z" />
-                </svg>
-              </div>
-              <p className="text-xl leading-relaxed text-gray-500 dark:text-gray-400 mb-3">
-                还没有上传任何GIF文件
-              </p>
-              <p className="text-base text-gray-400 dark:text-gray-500">
-                请上传GIF文件开始添加水印
-              </p>
-            </div>
+        
+        <div className="space-y-16">
+          {/* 大标题和功能描述 */}
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-black dark:text-white mb-6">
+              GIF水印工具
+            </h1>
+            <p className="text-lg leading-relaxed text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              轻松为您的GIF动图添加图片水印或文字水印,支持自由调整位置、大小、旋转角度和透明度
+            </p>
           </div>
-        ) : (
-          <div className="space-y-12">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-100 dark:border-gray-700">
-              <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">
-                选择GIF文件
-              </h2>
-              <GifUploader onFilesAdded={handleGifsAdded} />
-            </div>
+          
+          {/* 上传GIF模块 */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-100 dark:border-gray-700 hover:shadow-2xl transition-shadow duration-300">
+            <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">
+              选择GIF文件
+            </h2>
+            <GifUploader onFilesAdded={handleGifsAdded} />
           </div>
-        )}
+        </div>
+        
+        
 
         {/* 水印编辑区域 */}
         {gifObjects.length > 0 && (
@@ -162,11 +135,11 @@ export default function GifWatermarkPage() {
                 水印预览
               </h2>
               {/* 顶部GIF缩略图切换区 */}
-              <div className="flex items-center gap-3 overflow-x-auto pb-3 mb-6">
+              <div className="flex items-center gap-3 overflow-x-auto pb-6 pt-3 px-3 mb-6 -mx-3">
                 {gifObjects.map((gif, index) => (
                   <div
                     key={gif.id}
-                    className={`relative rounded-lg border-2 transition-all group ${
+                    className={`relative flex-shrink-0 rounded-lg border-2 transition-all group shadow-md ${
                       currentGifIndex === index
                         ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/20 shadow-lg'
                         : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
