@@ -162,13 +162,31 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
   }, [gifObjects, options.columns, options.mergeMode, calculateOriginalDimensions, calculateTargetDimensions]);
 
   /**
+   * GIF 实例接口定义
+   */
+  interface GifInstance {
+    on(event: 'progress', callback: (progress: number) => void): void;
+    on(event: 'finished', callback: (blob: Blob) => void): void;
+    addFrame: (canvas: CanvasRenderingContext2D, options: { copy: boolean; delay: number }) => void;
+    render: () => void;
+  }
+
+  /**
    * 动态加载 gif.js 库
    * @returns GIF 构造函数
    */
   const loadGifJs = useCallback(async () => {
     try {
       const mod = await import('gif.js');
-      return (mod as unknown as { default: new (options: any) => any }).default;
+      return (mod as unknown as { default: new (options: {
+        workers: number;
+        quality: number;
+        width: number;
+        height: number;
+        transparent?: number | null;
+        background?: number | null;
+        workerScript?: string;
+      }) => GifInstance }).default;
     } catch {
       throw new Error('gif.js加载失败');
     }
@@ -214,26 +232,15 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
       setExportedDimensions({ width: totalWidth, height: totalHeight });
 
       // 创建 gif.js 实例
-      interface GifInstance {
-        on(event: 'progress', callback: (progress: number) => void): void;
-        on(event: 'finished', callback: (blob: Blob) => void): void;
-        addFrame: (canvas: CanvasRenderingContext2D, options: { copy: boolean; delay: number }) => void;
-        render: () => void;
-      }
-      
-      interface GifConstructor {
-        new (options: {
-          workers: number;
-          quality: number;
-          width: number;
-          height: number;
-          transparent?: number | null;
-          background?: number | null;
-          workerScript?: string;
-        }): GifInstance;
-      }
-      
-      const GifConstructor = GIF as unknown as GifConstructor;
+      const GifConstructor = GIF as unknown as new (options: {
+        workers: number;
+        quality: number;
+        width: number;
+        height: number;
+        transparent?: number | null;
+        background?: number | null;
+        workerScript?: string;
+      }) => GifInstance;
       
       const gif = new GifConstructor({
         workers: 2,
