@@ -8,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
       },
     ],
-    sitemap: 'https://webtool.chaiyi.fun/sitemap.xml',
+    sitemap: 'https://chaiyi.fun/sitemap.xml',
   };
 }

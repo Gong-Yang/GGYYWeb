@@ -6,6 +6,8 @@ declare module 'gif.js' {
     height?: number;
     transparent?: number | null;
     background?: number | null;
+    // Path to gif.worker.js script, required when bundlers isolate assets
+    workerScript?: string;
     repeat?: number;
     dispose?: number;
   }

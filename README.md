@@ -149,3 +149,74 @@ MIT
 
 
 [docs]: https://docs.blazity.com/next-enterprise/deployments/enterprise-cli
+
+
+
+
+
+
+
+# 目录结构
+
+字体使用：阿里妈妈方圆体 —— 免费商用  https://zhuanlan.zhihu.com/p/682221678
+
+
+
+```html
+src/
+├── app/                    # 按子项目划分的页面
+│   ├── Auth/               # Auth 相关页面
+│   ├── DBuddy/             # DBuddy 相关页面
+│   ├── Home/               # Home 相关页面
+│   └── WebTool/            # WebTool 相关页面
+│
+├── api/                	# 接口定义
+│   ├── auth/               # Auth 接口
+│   ├── login.ts       # 接口函数
+│   │   └── types.ts       # 专属类型（如 LoginParams, LoginResponse）
+│   └── ...                 # 子项目文件夹
+│
+├── components/             # 按子项目划分的组件
+│   ├── WebTool/            # WebTool 相关组件
+│   │   │   utils/        	# WebTool 工具函数
+│   │   └── general/        # WebTool 内部通用组件
+│   ├── general/            # 全项目通用组件（如 Button）
+│   └── ...                 # 子项目文件夹
+│
+├── types/                  # ✅ 全局类型定义，只有少数共享类型
+│   ├── user.ts             # 用户相关类型（通用）
+│   └── ...                 # 其他通用类型定义
+│
+├── utils/                  # ✅ 纯工具函数，全项目通用工具
+│
+├── core/                   # ✅ 按需添加：全局服务/状态  好吧目前还不知道放什么
+│
+├── lib/                    # ❓ 按需添加：第三方库封装  没有创建。
+│
+└── （其他待补充）
+```
+
+
+
+
+
+## typescript类型定义文件位置：
+
+接口定义：
+
+1. 通用 API 类型，放`types`目录下。
+2. 其余就近存放。
+
+组件或页面定义：
+
+1. 多项目通用，放`types`目录下。
+
+2. 不通用，就近存放。
+
+
+
+## 工具文件位置：
+
+1.如只WebTool项目通用或用到，放在`WebTool/utils`下。
+
+2.如多个项目通用，放在`utils`下。
