@@ -145,32 +145,6 @@ export default function RegisterActivePage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
-      {/* 返回登录页面按钮  */}
-      {/* <div className="absolute top-6 left-6">
-        <button
-          onClick={() => router.push('/Auth/login')}
-          className="flex items-center gap-2 text-white dark:text-black hover:opacity-80 transition-opacity"
-        >
-          <div className="w-8 h-8 rounded-full bg-black dark:bg-white flex items-center justify-center">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M10 12L6 8L10 4"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <span className="ml-2 text-sm text-black dark:text-white">登录</span>
-        </button>
-      </div> */}
 
       {/* 注册表单  */}
       <div className="min-h-screen flex items-center justify-center px-4">
