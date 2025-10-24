@@ -34,7 +34,7 @@ export function FramePreview({ frame, frameIndex, gifWidth, gifHeight }: FramePr
 
     try {
       ctx.putImageData(frame.imageData, 0, 0);
-    } catch (error) {
+    } catch {
       ctx.fillStyle = '#ffff00';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = '#000000';

@@ -2,8 +2,9 @@
 
 import Image from 'next/image';
 import React, { useCallback, useEffect, useState } from 'react';
-import type { GifObject, MergeOptions } from './types';
+
 import { SizeInput } from './SizeInput';
+import type { GifObject, MergeOptions } from './types';
 
 interface GifExporterProps {
   /** 已上传的 GIF 对象列表 */
@@ -213,20 +214,26 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
       setExportedDimensions({ width: totalWidth, height: totalHeight });
 
       // 创建 gif.js 实例
-      const GifConstructor = GIF as unknown as new (options: {
-        workers: number;
-        quality: number;
-        width: number;
-        height: number;
-        transparent?: number | null;
-        background?: number | null;
-        workerScript?: string;
-      }) => {
+      interface GifInstance {
         on(event: 'progress', callback: (progress: number) => void): void;
         on(event: 'finished', callback: (blob: Blob) => void): void;
         addFrame: (canvas: CanvasRenderingContext2D, options: { copy: boolean; delay: number }) => void;
         render: () => void;
-      };
+      }
+      
+      interface GifConstructor {
+        new (options: {
+          workers: number;
+          quality: number;
+          width: number;
+          height: number;
+          transparent?: number | null;
+          background?: number | null;
+          workerScript?: string;
+        }): GifInstance;
+      }
+      
+      const GifConstructor = GIF as unknown as GifConstructor;
       
       const gif = new GifConstructor({
         workers: 2,

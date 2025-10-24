@@ -1,6 +1,7 @@
 import "styles/tailwind.css"
-import { Header } from "@/components/Home/Header/Header"
+
 import { Footer } from "@/components/general/Footer/Footer"
+import { Header } from "@/components/Home/Header/Header"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

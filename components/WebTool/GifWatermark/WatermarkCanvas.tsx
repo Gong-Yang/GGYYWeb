@@ -30,7 +30,6 @@ export function WatermarkCanvas({
   const imageCache = useRef<Map<string, HTMLImageElement>>(new Map());
   const [resizeMode, setResizeMode] = useState<'none' | 'resize' | 'rotate'>('none');
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0, rotation: 0 });
-  const [resizeCorner, setResizeCorner] = useState<string>('');
   const updateTimeoutRef = useRef<number | null>(null);
 
   // 预加载图片水印
@@ -208,7 +207,6 @@ export function WatermarkCanvas({
           return;
         } else if (handle !== 'none') {
           setResizeMode('resize');
-          setResizeCorner(handle);
           const canvas = canvasRef.current;
           const ctx = canvas?.getContext('2d');
           let width = 0, height = 0;

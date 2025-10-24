@@ -36,7 +36,7 @@ export function Modal({
   onClose,
   title,
   children,
-  showCloseButton = true,
+  showCloseButton: _showCloseButton = true,
   confirmText,
   cancelText,
   onConfirm,

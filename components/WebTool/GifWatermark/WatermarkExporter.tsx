@@ -42,14 +42,21 @@ export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: Wa
     return new Promise((resolve, reject) => {
       try {
 
-        // GIF配置：如果GIF有透明背景，使用特殊处理
-        const gifConfig: any = {
+        // GIF配置:如果GIF有透明背景,使用特殊处理
+        const gifConfig: {
+          workers: number;
+          quality: number;
+          width: number;
+          height: number;
+          workerScript: string;
+          transparent: number | null;
+        } = {
           workers: 2,
           quality: 10,
           width: gifObject.width,
           height: gifObject.height,
           workerScript: '/gif.worker.js',
-          transparent: gifObject.hasTransparency ? 'rgba(0,0,0,0)' : null  // 当GIF有透明背景时，才使用透明色
+          transparent: gifObject.hasTransparency ? 0x000000 : null  // 当GIF有透明背景时,才使用透明色
         };
         
         const gif = new GIF(gifConfig);
@@ -92,7 +99,7 @@ export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: Wa
               .forEach(w => renderWatermarkToCanvas(ctx, w));
 
             // 根据配置决定是否启用帧透明
-            const frameOptions: any = { delay: frame.delay, copy: true };
+            const frameOptions: { delay: number; copy: boolean; transparent?: boolean } = { delay: frame.delay, copy: true };
             if (gifObject.hasTransparency) {
               frameOptions.transparent = true;
             }

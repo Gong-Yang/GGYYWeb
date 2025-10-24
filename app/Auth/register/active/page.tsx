@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Input } from "@/components/general/Input/Input"
+
 import { Button } from "@/components/general/Button/Button"
+import { Input } from "@/components/general/Input/Input"
 import { Modal } from "@/components/general/Modal/Modal"
 
 
@@ -13,8 +14,7 @@ interface Results {
 }
 
 export default function RegisterActivePage() {
-  const router = useRouter()
-  const [userInfo, setUserInfo] = useState<{ nickname: string; email: string }>({
+  const [userInfo] = useState<{ nickname: string; email: string }>({
     nickname: "a",
     email: "a",
   })
