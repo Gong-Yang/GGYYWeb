@@ -198,6 +198,9 @@ importers:
       '@total-typescript/ts-reset':
         specifier: ^0.5.1
         version: 0.5.1
+      '@types/file-saver':
+        specifier: ^2.0.7
+        version: 2.0.7
       '@types/node':
         specifier: ^20.17.43
         version: 20.17.43
@@ -3615,6 +3618,9 @@ packages:
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
+
+  '@types/file-saver@2.0.7':
+    resolution: {integrity: sha512-dNKVfHd/jk0SkR/exKGj2ggkB45MAkzvWCaqLUUgkyjITkGNzH8H+yUwr+BLJUBjZOe9w8X3wgmXhZDRg1ED6A==}
 
   '@types/graceful-fs@4.1.9':
     resolution: {integrity: sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ==}
@@ -12557,6 +12563,8 @@ snapshots:
   '@types/estree@1.0.6': {}
 
   '@types/estree@1.0.8': {}
+
+  '@types/file-saver@2.0.7': {}
 
   '@types/graceful-fs@4.1.9':
     dependencies:
