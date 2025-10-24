@@ -52,6 +52,7 @@
     "@t3-oss/env-nextjs": "^0.10.1",
     "@vercel/otel": "^1.12.0",
     "class-variance-authority": "^0.7.0",
+    "file-saver": "^2.0.5",
     "gif.js": "^0.2.0",
     "gifshot": "^0.4.5",
     "gifuct-js": "^2.1.2",
