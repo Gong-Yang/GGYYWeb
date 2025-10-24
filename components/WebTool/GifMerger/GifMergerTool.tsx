@@ -5,8 +5,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { FramePreview } from './FramePreview';
 import { GifExporter } from './GifExporter';
-import { GifUploader } from '../general/GifUploader';
 import type { GifFrame, GifObject } from './types';
+import { GifUploader } from '../general/GifUploader';
 
 /**
  * 格式化文件大小

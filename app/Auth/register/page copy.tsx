@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Input } from "@/components/general/Input/Input"
+
 import { Button } from "@/components/general/Button/Button"
+import { Input } from "@/components/general/Input/Input"
 import { Modal } from "@/components/general/Modal/Modal"
 
 export default function RegisterPage() {
@@ -14,7 +15,6 @@ export default function RegisterPage() {
   const [errorNickname, setErrorNickname] = useState<string>("")  
 
   const [submitButton,setSubmitButton] = useState<string>("发起验证")  // 提交按钮的文字  发起验证  处理中...  已发送邮件
-  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [showEmailSentModal, setShowEmailSentModal] = useState<boolean>(false) // 邮件发送成功弹窗
 
 
@@ -79,7 +79,6 @@ export default function RegisterPage() {
     }
     
     setSubmitButton("处理中...")
-    setIsLoading(true)
     
     try {
       // TODO: 实现注册逻辑
@@ -92,8 +91,6 @@ export default function RegisterPage() {
       contdown(60)
     } catch (error) {
       console.error("Registration failed:", error)
-    } finally {
-      setIsLoading(false)
     }
   }
 

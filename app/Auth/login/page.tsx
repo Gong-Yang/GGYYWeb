@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Input } from "@/components/general/Input/Input"
+
 import { Button } from "@/components/general/Button/Button"
+import { Input } from "@/components/general/Input/Input"
 import { Modal } from "@/components/general/Modal/Modal"
 
 export default function LoginPage() {
