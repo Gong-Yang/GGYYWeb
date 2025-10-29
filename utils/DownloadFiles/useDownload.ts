@@ -10,6 +10,9 @@ import { downloadFiles,downloadFile, downloadFilesWithProgress, DownloadableFile
     await download(files);
 */
 
+// 导出类型定义，方便其他模块使用
+export type { DownloadableFile, DownloadOptions };
+
 export function useDownload() {
   // 批量下载 ,打包成zip
   const downloads = useCallback(async (files: DownloadableFile[], options: DownloadOptions) => {
@@ -27,8 +30,8 @@ export function useDownload() {
   }, []);
 
   return {
-    download,
-    downloads,
-    downloadWithProgress,
+    download, // 单个下载
+    downloads,  // 批量下载
+    downloadWithProgress,  // 单个、批量下载，带进度
   };
 }
