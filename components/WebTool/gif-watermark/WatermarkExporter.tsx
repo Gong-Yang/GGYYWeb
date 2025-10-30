@@ -7,6 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/general/Button/Button';
 
 import type { GifObject, Watermark } from './types';
+import { useDownload, type DownloadableFile } from '@/utils/DownloadFiles/useDownload';
 
 interface WatermarkExporterProps {
   gifObjects: GifObject[];
@@ -14,14 +15,15 @@ interface WatermarkExporterProps {
   selectedGifIds: string[];
 }
 
-interface ProcessedGif {
+// 扩展 DownloadableFile 类型以包含我们需要的额外属性
+interface ProcessedGif extends DownloadableFile {
   id: string;
-  name: string;
-  url: string;
   blob: Blob;
 }
 
 export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: WatermarkExporterProps) {
+  const { downloadWithProgress } = useDownload();  //下载工具，自定义hooks
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [processedGifs, setProcessedGifs] = useState<ProcessedGif[]>([]);
@@ -41,7 +43,6 @@ export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: Wa
   const applyWatermarksToGif = useCallback(async (gifObject: GifObject): Promise<Blob> => {
     return new Promise((resolve, reject) => {
       try {
-
         // GIF配置:如果GIF有透明背景,使用特殊处理
         const gifConfig: {
           workers: number;
@@ -214,25 +215,14 @@ export function WatermarkExporter({ gifObjects, watermarks, selectedGifIds }: Wa
     setSelectedProcessedIds([]);
   }, []);
 
-  const downloadGif = useCallback((gif: ProcessedGif) => {
-    const a = document.createElement('a');
-    a.href = gif.url;
-    a.download = gif.name;
-    a.click();
-  }, []);
-
   const downloadSelected = useCallback(() => {
     const selected = processedGifs.filter(g => selectedProcessedIds.includes(g.id));
-    selected.forEach(gif => {
-      setTimeout(() => downloadGif(gif), 100);
-    });
-  }, [processedGifs, selectedProcessedIds, downloadGif]);
+    downloadWithProgress(selected);
+  }, [processedGifs, selectedProcessedIds, downloadWithProgress]);
 
   const downloadAll = useCallback(() => {
-    processedGifs.forEach(gif => {
-      setTimeout(() => downloadGif(gif), 100);
-    });
-  }, [processedGifs, downloadGif]);
+    downloadWithProgress(processedGifs);
+  }, [processedGifs, downloadWithProgress]);
 
   return (
     <div className="space-y-8">

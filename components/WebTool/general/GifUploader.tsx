@@ -4,7 +4,7 @@ import { decompressFrames, parseGIF } from 'gifuct-js';
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import type { GifFrame, GifObject } from '../GifMerger/types';
+import type { GifFrame, GifObject } from '../gif-merger/types';
 
 interface GifUploaderProps {
   /** 文件添加成功后的回调函数 */

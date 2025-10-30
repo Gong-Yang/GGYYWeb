@@ -6,52 +6,62 @@ import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/general/Button/Button';
 import { GifUploader } from '@/components/WebTool/general/GifUploader';
 
-import type { GifObject, ImageWatermark, TextWatermark, Watermark } from '@/components/WebTool/GifWatermark/types';
-import { WatermarkCanvas } from '@/components/WebTool/GifWatermark/WatermarkCanvas';
-import { WatermarkControls } from '@/components/WebTool/GifWatermark/WatermarkControls';
-import { WatermarkExporter } from '@/components/WebTool/GifWatermark/WatermarkExporter';
-import { WatermarkUploader } from '@/components/WebTool/GifWatermark/WatermarkUploader';
+import type { GifObject, ImageWatermark, TextWatermark, Watermark } from '@/components/WebTool/gif-watermark/types';
+import { WatermarkCanvas } from '@/components/WebTool/gif-watermark/WatermarkCanvas';
+import { WatermarkControls } from '@/components/WebTool/gif-watermark/WatermarkControls';
+import { WatermarkExporter } from '@/components/WebTool/gif-watermark/WatermarkExporter';
+import { WatermarkUploader } from '@/components/WebTool/gif-watermark/WatermarkUploader';
+
+// 水印初始位置
+const WATERMARK_INITIAL_POSITION = { x: 50, y: 50 };
 
 export default function GifWatermarkPage() {
   const [gifObjects, setGifObjects] = useState<GifObject[]>([]);
   const [watermarks, setWatermarks] = useState<Watermark[]>([]);
   const [selectedWatermarkId, setSelectedWatermarkId] = useState<string | null>(null);
   const [currentGifIndex, setCurrentGifIndex] = useState<number>(0);
-  // 保存每个水印的初始位置
-  const [watermarkInitialPositions, setWatermarkInitialPositions] = useState<Record<string, { x: number; y: number }>>({});
 
   // 添加GIF文件
   const handleGifsAdded = useCallback((newGifs: GifObject[]) => {
     setGifObjects(prev => [...prev, ...newGifs]);
-    if (newGifs.length > 0 && gifObjects.length === 0) {
+    if (newGifs.length > 0 && gifObjects.length === 0) { 
       setCurrentGifIndex(0);
     }
   }, [gifObjects.length]);
 
   // 删除GIF文件
-  const handleDeleteGif = useCallback((gifId: string) => {
+  const handleDeleteGif = useCallback((gifId?: string) => {
+    // 当未传入gifId时，清空所有GIF
+    if (!gifId){
+      setGifObjects([]);
+      setCurrentGifIndex(0);
+      return;
+    }
+
     setGifObjects(prev => {
       const deletedIndex = prev.findIndex(g => g.id === gifId);
+      if (deletedIndex === -1) return prev; // 未找到，不操作
+
       const newGifs = prev.filter(g => g.id !== gifId);
-      
-      // 调整当前索引
-      if (deletedIndex <= currentGifIndex && currentGifIndex > 0) {
+
+      // 调整当前索引     
+      /*
+          1.删除的是前面的项 → 当前项前移
+          2.选择最后一个，删除的是当前项→ 当前项前移
+          3.选择第一个时，删除当前或非当前项时 → 保持不变
+      */ 
+      if( deletedIndex <= currentGifIndex && currentGifIndex > 0){
         setCurrentGifIndex(currentGifIndex - 1);
       }
-      
+
       return newGifs;
     });
+    
   }, [currentGifIndex]);
 
   // 添加图片水印
   const handleWatermarksAdded = useCallback((newWatermarks: ImageWatermark[]) => {
     setWatermarks(prev => [...prev, ...newWatermarks]);
-    // 保存初始位置
-    const newPositions: Record<string, { x: number; y: number }> = {};
-    newWatermarks.forEach(w => {
-      newPositions[w.id] = { x: w.position.x, y: w.position.y };
-    });
-    setWatermarkInitialPositions(prev => ({ ...prev, ...newPositions }));
   }, []);
 
   // 添加文字水印
@@ -72,11 +82,6 @@ export default function GifWatermarkPage() {
     };
     setWatermarks(prev => [...prev, newTextWatermark]);
     setSelectedWatermarkId(newTextWatermark.id);
-    // 保存初始位置
-    setWatermarkInitialPositions(prev => ({
-      ...prev,
-      [newTextWatermark.id]: { x: 50, y: 50 }
-    }));
   }, []);
 
   // 更新水印
@@ -90,11 +95,12 @@ export default function GifWatermarkPage() {
   const handleDeleteWatermark = useCallback((id: string) => {
     setWatermarks(prev => prev.filter(w => w.id !== id));
     setSelectedWatermarkId(prev => (prev === id ? null : prev));
-    // 删除初始位置记录
-    setWatermarkInitialPositions(prev => {
-      const { [id]: _, ...rest } = prev;
-      return rest;
-    });
+  }, []);
+
+  // 删除所有水印以及水印设置
+  const handleClearWatermarks = useCallback(() => {
+    setWatermarks([]);
+    setSelectedWatermarkId(null);
   }, []);
 
   const currentGif = gifObjects[currentGifIndex] || null;
@@ -131,9 +137,25 @@ export default function GifWatermarkPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
             {/* 预览画布 */}
             <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-100 dark:border-gray-700">
-              <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">
-                水印预览
-              </h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  水印预览
+                </h2>
+                <Button
+                  size="sm"
+                  intent="darkBorder"
+                  onClick={() => {
+                      handleDeleteGif()
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span>清空gif</span>
+                  </div>
+                </Button>
+              </div>
               {/* 顶部GIF缩略图切换区 */}
               <div className="flex items-center gap-3 overflow-x-auto pb-6 pt-3 px-3 mb-6 -mx-3">
                 {gifObjects.map((gif, index) => (
@@ -163,6 +185,7 @@ export default function GifWatermarkPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        console.log('删除GIF:', gif.file.name);
                         handleDeleteGif(gif.id);
                       }}
                       className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
@@ -189,7 +212,7 @@ export default function GifWatermarkPage() {
             <div className="space-y-8">
               {/* 添加水印 */}
               <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl border border-gray-100 dark:border-gray-700">
-                <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   添加水印
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
@@ -214,9 +237,27 @@ export default function GifWatermarkPage() {
               {/* 水印列表 */}
               {watermarks.length > 0 && (
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl border border-gray-100 dark:border-gray-700">
+                  <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">
                     水印列表 ({watermarks.length})
                   </h2>
+                  <Button
+                    size="sm"
+                    intent="darkBorder"
+                    onClick={() => {
+                        handleClearWatermarks()
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span>清空水印</span>
+                    </div>
+                  </Button>
+                </div>
+                  
+                  
                   <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                     {watermarks.map(watermark => (
                       <div
@@ -266,7 +307,7 @@ export default function GifWatermarkPage() {
                     watermark={selectedWatermark}
                     onUpdate={(updates) => handleWatermarkUpdate(selectedWatermark.id, updates)}
                     onDelete={() => handleDeleteWatermark(selectedWatermark.id)}
-                    initialPosition={watermarkInitialPositions[selectedWatermark.id]}
+                    initialPosition={WATERMARK_INITIAL_POSITION}
                   />
                 </div>
               )}

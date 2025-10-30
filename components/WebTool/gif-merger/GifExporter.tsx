@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { SizeInput } from './SizeInput';
 import type { GifObject, MergeOptions } from './types';
+import { useDownload } from '@/utils/DownloadFiles/useDownload';
 
 interface GifExporterProps {
   /** 已上传的 GIF 对象列表 */
@@ -56,6 +57,9 @@ interface GifExporterProps {
  * 支持多种合并模式、自定义尺寸和背景颜色
  */
 export function GifExporter({ gifObjects, disabled = false, defaultBackgroundColor = 'original' }: GifExporterProps) {
+
+  const { download } = useDownload();
+
   // 是否正在导出
   const [isExporting, setIsExporting] = useState(false);
   // 导出的 GIF Blob URL
@@ -390,10 +394,12 @@ export function GifExporter({ gifObjects, disabled = false, defaultBackgroundCol
    */
   const downloadGif = useCallback(() => {
     if (exportedGif) {
-      const link = document.createElement('a');
-      link.href = exportedGif;
-      link.download = `merged-${Date.now()}.gif`;
-      link.click();
+      
+      download({url:exportedGif, name:`merged-${Date.now()}.gif`})
+      // const link = document.createElement('a');
+      // link.href = exportedGif;
+      // link.download = `merged-${Date.now()}.gif`;
+      // link.click();
     }
   }, [exportedGif]);
   

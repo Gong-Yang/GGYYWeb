@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { GifMergerTool } from '@/components/WebTool/GifMerger/GifMergerTool';
+import { GifMergerTool } from '@/components/WebTool/gif-merger/GifMergerTool';
 
 export const metadata: Metadata = {
   title: 'GIF处理工具 - 在线多GIF动画合并编辑器 | WebTool',

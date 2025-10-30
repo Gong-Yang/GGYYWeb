@@ -40,7 +40,7 @@ const TOOL_CATEGORIES = [
       { name: '图片格式转换', href: '/WebTool/image-converter', description: 'JPG/PNG/WebP转换', comingSoon: true },
       { name: '图片压缩', href: '/WebTool/image-compress', description: '压缩图片大小', comingSoon: true },
       { name: '图片裁剪', href: '/WebTool/image-crop', description: '裁剪图片', comingSoon: true },
-      { name: '批量水印', href: '/WebTool/image-watermark', description: '批量添加水印', comingSoon: true },
+      { name: '批量水印', href: '/WebTool/image-watermark', description: '批量添加水印' },
     ],
   },
   {
