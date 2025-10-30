@@ -6,11 +6,11 @@ import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/general/Button/Button';
 import { GifUploader } from '@/components/WebTool/general/GifUploader';
 
-import type { GifObject, ImageWatermark, TextWatermark, Watermark } from '@/components/WebTool/GifWatermark/types';
-import { WatermarkCanvas } from '@/components/WebTool/GifWatermark/WatermarkCanvas';
-import { WatermarkControls } from '@/components/WebTool/GifWatermark/WatermarkControls';
-import { WatermarkExporter } from '@/components/WebTool/GifWatermark/WatermarkExporter';
-import { WatermarkUploader } from '@/components/WebTool/GifWatermark/WatermarkUploader';
+import type { GifObject, ImageWatermark, TextWatermark, Watermark } from '@/components/WebTool/gif-watermark/types';
+import { WatermarkCanvas } from '@/components/WebTool/gif-watermark/WatermarkCanvas';
+import { WatermarkControls } from '@/components/WebTool/gif-watermark/WatermarkControls';
+import { WatermarkExporter } from '@/components/WebTool/gif-watermark/WatermarkExporter';
+import { WatermarkUploader } from '@/components/WebTool/gif-watermark/WatermarkUploader';
 
 // 水印初始位置
 const WATERMARK_INITIAL_POSITION = { x: 50, y: 50 };
